@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: finhabit
+  server:
+    port:
+      8070
