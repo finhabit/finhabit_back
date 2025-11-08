@@ -1,0 +1,19 @@
+services:
+  finhabit-mysql:
+    image: mysql:8.0.43
+    container_name: finhabit-mysql-dev
+    environment:
+      MYSQL_ROOT_PASSWORD: finhabit_root
+      MYSQL_DATABASE: finhabit_db
+      MYSQL_USER: teamF
+      MYSQL_PASSWORD: finhabit_pw
+      TZ: Asia/Seoul
+    command: [
+      "--default-authentication-plugin=caching_sha2_password",
+      "--character-set-server=utf8mb4",
+      "--collation-server=utf8mb4_unicode_ci"
+    ]
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./_vol/mysql:/var/lib/mysql
