@@ -41,10 +41,14 @@ spotless {
     }
 }
 
-processResources.dependsOn('copySecret')
-
 tasks.register('copySecret', Copy) {
     from './config'
     include "*.yml"
     into 'src/main/resources'
+}
+
+processResources.dependsOn('copySecret')
+
+tasks.named("spotlessJava") {
+    dependsOn("copySecret")
 }

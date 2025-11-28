@@ -8,6 +8,6 @@ public class HelloController {
 
     @GetMapping("/")
     public String hello() {
-        return "🚀 Seperate CICD Test -- Hello! Finhabit Back-end is ALIVE and running!";
+        return "🚀 PR CICD Test -- Hello! Finhabit Back-end is running!";
     }
 }
