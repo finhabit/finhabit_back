@@ -27,7 +27,7 @@ public class OpenAPIConfig {
         Server server;
         if ("prod".equals(activeProfile)) {
             server = new Server();
-            server.setUrl("https://finhabit.shop"); // 운영 도메인
+            server.setUrl("https://www.finhabit.shop"); // 운영 도메인
             server.setDescription("Production Server");
         } else {
             server = new Server();

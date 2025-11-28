@@ -14,7 +14,7 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("https://finhabit.shop") // 프론트/Swagger 접근 URL
+                        .allowedOrigins("https://www.finhabit.shop") // 프론트/Swagger 접근 URL
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
