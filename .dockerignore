@@ -1,6 +1,49 @@
-.gradle
+# Build / Gradle
+.gradle/
+build/
+
+# Node.js (프론트 포함 시)
+node_modules/
+dist/
 build
-.git
+
+# Git
+.git/
 .gitignore
+
+# OS / Editor files
 .DS_Store
-node_modules
+Thumbs.db
+*.swp
+
+# IDE
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Environment / Secrets
+.env
+.env.*
+*.env
+
+# Logs
+logs/
+*.log
+
+# Test artifacts
+coverage/
+pytest_cache/
+
+# Docker files (빌드 컨텍스트 제외)
+Dockerfile
+docker-compose.yml
