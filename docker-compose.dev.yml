@@ -1,4 +1,15 @@
 services:
+  app:
+    image: finhabit-app:local
+    container_name: finhabit-app-dev
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    depends_on:
+      - finhabit-mysql
+    restart: unless-stopped
+
   finhabit-mysql:
     image: mysql:8.0.43
     container_name: finhabit-mysql-dev
