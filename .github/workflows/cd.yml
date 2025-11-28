@@ -2,7 +2,7 @@ name: CD (Deployment)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "BACKEND", "cicd" ]
   workflow_dispatch:
 
 concurrency:
