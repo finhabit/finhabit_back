@@ -1,5 +1,7 @@
 package com.ll.finhabit.domain.auth.controller;
 
+import com.ll.finhabit.domain.auth.dto.LoginRequest;
+import com.ll.finhabit.domain.auth.dto.LoginResponse;
 import com.ll.finhabit.domain.auth.dto.SignupRequest;
 import com.ll.finhabit.domain.auth.dto.SignupResponse;
 import com.ll.finhabit.domain.auth.entity.LevelTest;
@@ -26,5 +28,10 @@ public class AuthController {
     @GetMapping("/leveltest")
     public List<LevelTest> getLevelTests() {
         return levelTestRepository.findAll();
+    }
+
+    @PostMapping("/login")
+    public LoginResponse login(@RequestBody LoginRequest request) {
+        return authService.login(request);
     }
 }
