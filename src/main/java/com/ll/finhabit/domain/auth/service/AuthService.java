@@ -88,16 +88,13 @@ public class AuthService {
     @Transactional
     public LoginResponse login(LoginRequest req) {
 
-        // 1) username으로 유저 찾기
         User user = userRepository.findByUsername(req.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("아이디가 존재하지 않습니다."));
 
-        // 2) 비밀번호 검증 (plain vs encoded)
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 올바르지 않습니다.");
         }
 
-        // 3) 로그인 성공 → 응답 DTO로 변환
         return LoginResponse.builder()
                 .id(user.getId())
                 .nickname(user.getNickname())
