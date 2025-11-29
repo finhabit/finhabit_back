@@ -47,6 +47,7 @@ public class AuthService {
 
         User saved = userRepository.save(user);
 
+        // 레벨 테스트 채점 + UserLevel 저장
         int correctCount = 0;
 
         if (req.getLevelTestAnswers() != null) {
@@ -83,4 +84,5 @@ public class AuthService {
                 .email(saved.getEmail())
                 .build();
     }
+
 }
