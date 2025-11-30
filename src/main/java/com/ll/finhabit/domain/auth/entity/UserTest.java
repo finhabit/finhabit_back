@@ -1,6 +1,5 @@
 package com.ll.finhabit.domain.auth.entity;
 
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
