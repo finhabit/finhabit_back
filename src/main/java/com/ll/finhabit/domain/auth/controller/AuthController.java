@@ -7,6 +7,8 @@ import com.ll.finhabit.domain.auth.dto.SignupResponse;
 import com.ll.finhabit.domain.auth.entity.LevelTest;
 import com.ll.finhabit.domain.auth.repository.LevelTestRepository;
 import com.ll.finhabit.domain.auth.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +35,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest request) {
-        return authService.login(request);
+    public LoginResponse login(@RequestBody LoginRequest request,
+                               HttpServletRequest httpRequest) {
+
+        LoginResponse res = authService.login(request);
+
+        HttpSession session = httpRequest.getSession();
+        session.setAttribute("LOGIN_USER_ID", res.getId());
+
+        return res;
     }
 }
