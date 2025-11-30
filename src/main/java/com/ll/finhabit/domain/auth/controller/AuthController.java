@@ -7,7 +7,9 @@ import com.ll.finhabit.domain.auth.dto.SignupResponse;
 import com.ll.finhabit.domain.auth.entity.LevelTest;
 import com.ll.finhabit.domain.auth.repository.LevelTestRepository;
 import com.ll.finhabit.domain.auth.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +23,8 @@ public class AuthController {
     private final LevelTestRepository levelTestRepository;
 
     @PostMapping("/signup")
-    public SignupResponse signup(@RequestBody SignupRequest request) {
-        return authService.signup(request);
+    public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest req) {
+        return ResponseEntity.ok(authService.signup(req));
     }
 
     @GetMapping("/leveltest")

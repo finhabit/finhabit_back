@@ -14,7 +14,7 @@ public class LevelTest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "test_id")
+    @Column(name = "testId")
     private Long testId;
 
     @Column(name = "test_category", length = 10, nullable = false)

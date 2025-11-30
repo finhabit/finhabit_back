@@ -8,7 +8,10 @@ import lombok.Getter;
 public class SignupResponse {
     private Long id;
     private String nickname;
-    private String username;
     private String email;
+
+    private Integer level;
+    private Integer correctCount;     // 맞춘 개수
+    private Integer correctRate;      // 맞춘 비율
 }
 

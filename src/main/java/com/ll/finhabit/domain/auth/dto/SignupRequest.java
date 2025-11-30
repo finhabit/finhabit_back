@@ -1,15 +1,25 @@
 package com.ll.finhabit.domain.auth.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-import java.util.List;
 
 @Data
 public class SignupRequest {
+
+    @NotBlank(message = "닉네임은 필수입니다.")
     private String nickname;
-    private String username;
+
+    @NotBlank(message = "이메일은 필수입니다.")
+    @Email(message = "이메일 형식이 올바르지 않습니다.")
     private String email;
+
+    @NotBlank(message = "비밀번호는 필수입니다.")
     private String password;
+
+    @NotBlank(message = "비밀번호 확인은 필수입니다.")
     private String passwordConfirm;
 
-    private List<LevelTestAnswer> levelTestAnswers;
+    // 레벨테스트 답
+    private java.util.List<LevelTestAnswer> levelTestAnswers;
 }
