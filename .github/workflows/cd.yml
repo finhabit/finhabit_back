@@ -1,9 +1,10 @@
 name: CD (Deployment)
 
 on:
-  push:
-    branches: [ "main", "BACKEND", "cicd" ]
-  workflow_dispatch:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
 
 concurrency:
   group: deploy-${{ github.ref }}
@@ -11,6 +12,7 @@ concurrency:
 
 jobs:
   build-and-push:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     outputs:
       tag_latest: ${{ steps.prep.outputs.tag_latest }}
@@ -70,6 +72,7 @@ jobs:
           cache-to: type=inline
 
   deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     needs: build-and-push
 

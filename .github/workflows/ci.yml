@@ -1,6 +1,9 @@
 name: CI
 on:
+  push:
+    branches: ["main", "BACKEND"]
   pull_request:
+    branches: ["main", "BACKEND"]
     types: [opened, synchronize, reopened]
 
 permissions:
