@@ -8,13 +8,12 @@ import com.ll.finhabit.domain.auth.repository.LevelTestRepository;
 import com.ll.finhabit.domain.auth.repository.UserLevelRepository;
 import com.ll.finhabit.domain.auth.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -32,10 +31,7 @@ public class AuthService {
 
     private void validateEmailFormat(String email) {
         if (email == null || !EMAIL_PATTERN.matcher(email).matches()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "이메일 형식이 올바르지 않습니다."
-            );
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이메일 형식이 올바르지 않습니다.");
         }
     }
 
@@ -48,18 +44,16 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.");
         }
 
-
         if (!req.getPassword().equals(req.getPasswordConfirm())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다.");
         }
 
-
-
-        User user = User.builder()
-                .nickname(req.getNickname())
-                .email(req.getEmail())
-                .password(passwordEncoder.encode(req.getPassword()))
-                .build();
+        User user =
+                User.builder()
+                        .nickname(req.getNickname())
+                        .email(req.getEmail())
+                        .password(passwordEncoder.encode(req.getPassword()))
+                        .build();
 
         User saved = userRepository.save(user);
 
@@ -67,23 +61,26 @@ public class AuthService {
 
         if (req.getLevelTestAnswers() != null) {
             for (LevelTestAnswer answerDto : req.getLevelTestAnswers()) {
-                LevelTest test = levelTestRepository.findById(answerDto.getTestId())
-                        .orElseThrow(() -> new ResponseStatusException(
-                                HttpStatus.BAD_REQUEST,
-                                "존재하지 않는 문제입니다."
-                        ));
+                LevelTest test =
+                        levelTestRepository
+                                .findById(answerDto.getTestId())
+                                .orElseThrow(
+                                        () ->
+                                                new ResponseStatusException(
+                                                        HttpStatus.BAD_REQUEST, "존재하지 않는 문제입니다."));
 
                 boolean isCorrect = test.getTestAnswer().equals(answerDto.getUserAnswer());
                 if (isCorrect) {
                     correctCount++;
                 }
 
-                UserLevel userLevel = UserLevel.builder()
-                        .user(saved)
-                        .test(test)
-                        .isCorrect(isCorrect)
-                        .userAnswer(answerDto.getUserAnswer())
-                        .build();
+                UserLevel userLevel =
+                        UserLevel.builder()
+                                .user(saved)
+                                .test(test)
+                                .isCorrect(isCorrect)
+                                .userAnswer(answerDto.getUserAnswer())
+                                .build();
 
                 userLevelRepository.save(userLevel);
             }
@@ -106,25 +103,24 @@ public class AuthService {
                 .nickname(saved.getNickname())
                 .email(saved.getEmail())
                 .level(saved.getLevel())
-                .correctCount(correctCount)      // 맞춘 개수
-                .correctRate(correctRate)        // 맞춘 비율(%)
+                .correctCount(correctCount) // 맞춘 개수
+                .correctRate(correctRate) // 맞춘 비율(%)
                 .build();
     }
 
     @Transactional(Transactional.TxType.SUPPORTS)
     public LoginResponse login(LoginRequest req) {
 
-        User user = userRepository.findByEmail(req.getEmail())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "이메일이 존재하지 않습니다."
-                ));
+        User user =
+                userRepository
+                        .findByEmail(req.getEmail())
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "이메일이 존재하지 않습니다."));
 
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "비밀번호가 올바르지 않습니다."
-            );
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "비밀번호가 올바르지 않습니다.");
         }
 
         return LoginResponse.builder()

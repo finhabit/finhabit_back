@@ -11,7 +11,6 @@ public class SignupResponse {
     private String email;
 
     private Integer level;
-    private Integer correctCount;     // 맞춘 개수
-    private Integer correctRate;      // 맞춘 비율
+    private Integer correctCount; // 맞춘 개수
+    private Integer correctRate; // 맞춘 비율
 }
-
