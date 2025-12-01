@@ -1,0 +1,30 @@
+services:
+  app:
+    image: finhabit-app:local
+    container_name: finhabit-app-local
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+    depends_on:
+      - finhabit-mysql-local
+    restart: unless-stopped
+
+  finhabit-mysql-local:
+    image: mysql:8.0.43
+    container_name: finhabit-mysql-local
+    environment:
+      MYSQL_ROOT_PASSWORD: finhabit_root
+      MYSQL_DATABASE: finhabit_db
+      MYSQL_USER: teamF
+      MYSQL_PASSWORD: finhabit_pw
+      TZ: Asia/Seoul
+    command: [
+      "--default-authentication-plugin=caching_sha2_password",
+      "--character-set-server=utf8mb4",
+      "--collation-server=utf8mb4_unicode_ci"
+    ]
+    ports:
+      - "13306:3306"
+    volumes:
+      - ./_vol/mysql/local:/var/lib/mysql
