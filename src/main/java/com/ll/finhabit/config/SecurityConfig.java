@@ -32,13 +32,15 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
-                                "/api-docs"
+                                "/api-docs",
+                                "/api/auth/login",        // 만약 REST 로그인 API
+                                "/api/auth/signup"      // 만약 REST 회원가입 API
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-        // 선택적으로 .csrf().disable() 등 추가
+                .formLogin()    // 폼 로그인 활성화 (페이지 직접 노출)
+        // .csrf().disable()  // REST API만 사용하면 개발 중에만 잠깐 끄기, 일반적으로는 켬
         ;
-
         return http.build();
     }
 }
