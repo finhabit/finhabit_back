@@ -1,9 +1,12 @@
 package com.ll.finhabit.domain.mission.service;
 
+import com.ll.finhabit.domain.auth.repository.UserRepository;
 import com.ll.finhabit.domain.mission.dto.MissionArchiveResponse;
 import com.ll.finhabit.domain.mission.dto.MissionProgressDto;
 import com.ll.finhabit.domain.mission.dto.MissionTodayResponse;
+import com.ll.finhabit.domain.mission.entity.Mission;
 import com.ll.finhabit.domain.mission.entity.UserMission;
+import com.ll.finhabit.domain.mission.repository.MissionRepository;
 import com.ll.finhabit.domain.mission.repository.UserMissionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,7 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,67 +26,108 @@ import java.util.stream.Collectors;
 public class MissionService {
 
     private final UserMissionRepository userMissionRepository;
+    private final MissionRepository missionRepository;
+    private final UserRepository userRepository;
 
-    // 오늘의 미션 + 이번주 미완료 미션 전체
+    @Transactional
     public MissionTodayResponse getMissionToday(Long userId) {
 
-        LocalDate thisMonday = LocalDate.now().with(DayOfWeek.MONDAY);
+        LocalDate today = LocalDate.now();
+        LocalDate thisMonday = today.with(DayOfWeek.MONDAY);
 
-        // 이번 주 + 미완료 미션들
-        List<UserMission> ongoingMissions =
-                userMissionRepository.findByUser_UserIdAndWeekStartAndIsCompletedFalseOrderByUsermissionIdAsc(
-                        userId, thisMonday
-                );
-
-        // 이번 주 + 미완료 첫 번째 → "오늘의 미션"
-        UserMission today = userMissionRepository
-                .findFirstByUser_UserIdAndWeekStartAndIsCompletedFalseOrderByUsermissionIdAsc(
-                        userId, thisMonday
-                )
+        // 1) 오늘 이미 배정된 미션 있으면 그거 그대로 반환
+        UserMission todayMission = userMissionRepository
+                .findByUser_IdAndAssignedDate(userId, today)
                 .orElse(null);
 
-        MissionProgressDto todayDto = (today == null) ? null : toDto(today);
+        if (todayMission != null) {
+            return MissionTodayResponse.builder()
+                    .todayMission(toDto(todayMission))
+                    .build();
+        }
 
-        List<MissionProgressDto> ongoingDtos = ongoingMissions.stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+
+        // 유저 가져오기 (필요하면)
+        var user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+        // 모든 미션 템플릿 가져오기 (레벨 필터링 등은 나중에 추가 가능)
+        List<Mission> allMissions = missionRepository.findAll();
+
+        // 이번 주에 quota가 남은 미션만 후보로 필터링
+        List<Mission> candidates = allMissions.stream()
+                .filter(mission -> {
+                    long assignedThisWeek = userMissionRepository
+                            .countByUser_IdAndMission_MissionIdAndWeekStart(
+                                    userId,
+                                    mission.getMissionId(),
+                                    thisMonday
+                            );
+                    return assignedThisWeek < mission.getTotalCount(); // totalCount만큼까지만 허용
+                })
+                .toList();
+
+        if (candidates.isEmpty()) {
+            // 이번 주에 더 배정할 미션이 없다면 오늘 미션 없음
+            return MissionTodayResponse.builder()
+                    .todayMission(null)
+                    .build();
+        }
+
+        // 랜덤으로 1개 선택
+        int idx = new Random().nextInt(candidates.size());
+        Mission chosen = candidates.get(idx);
+
+        // UserMission 생성 (오늘 배정)
+        UserMission newUserMission = UserMission.builder()
+                .user(user)
+                .mission(chosen)
+                .isCompleted(false)
+                .doneCount(0)
+                .progress(0)
+                .weekStart(thisMonday)
+                .assignedDate(today)
+                .completedAt(null)
+                .build();
+
+        todayMission = userMissionRepository.save(newUserMission);
 
         return MissionTodayResponse.builder()
-                .todayMission(todayDto)
-                .ongoingMissions(ongoingDtos)
+                .todayMission(toDto(todayMission))
                 .build();
     }
 
-    // 미션 체크(1회 수행)
+
     @Transactional
     public MissionProgressDto checkMission(Long userId, Long userMissionId) {
 
         UserMission userMission = userMissionRepository.findById(userMissionId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 미션입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저 미션입니다."));
 
-        if (!userMission.getUser().getUserId().equals(userId)) {
-            throw new IllegalArgumentException("해당 미션을 수행할 권한이 없습니다.");
+        // 소유자 검사
+        if (!userMission.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("해당 미션에 대한 권한이 없습니다.");
         }
 
-        // 이미 완료면 그대로 반환
-        if (userMission.getIsCompleted()) {
+        // 이미 완료된 경우 그대로 반환
+        if (Boolean.TRUE.equals(userMission.getIsCompleted())) {
             return toDto(userMission);
         }
 
-        // doneCount 증가
-        int newCount = userMission.getDoneCount() + 1;
-        int total = userMission.getMission().getTotalCount();
+        int newDoneCount = userMission.getDoneCount() + 1;
+        int totalCount = userMission.getMission().getTotalCount();
 
-        if (newCount > total) newCount = total;
+        if (newDoneCount > totalCount) {
+            newDoneCount = totalCount;
+        }
 
-        userMission.setDoneCount(newCount);
+        userMission.setDoneCount(newDoneCount);
 
-        // 진행률 계산
-        int progress = (int) Math.round((newCount * 100.0) / total);
+        int progress = (int) Math.round((newDoneCount * 100.0) / totalCount);
         userMission.setProgress(progress);
 
         // 완료 처리
-        if (newCount >= total) {
+        if (newDoneCount >= totalCount) {
             userMission.setIsCompleted(true);
             userMission.setCompletedAt(LocalDate.now());
         }
@@ -88,26 +135,22 @@ public class MissionService {
         return toDto(userMission);
     }
 
-    // 완료 아카이브 (주별)
     public List<MissionArchiveResponse> getMissionArchive(Long userId) {
 
-        // DB에서 "완료된 미션"을 모두 가져오면 됨 — 주별로 이미 weekStart가 있으니
-        List<UserMission> completed = userMissionRepository
-                .findAll()
-                .stream()
-                .filter(um -> um.getUser().getUserId().equals(userId))
-                .filter(um -> um.getIsCompleted() != null && um.getIsCompleted())
+        List<UserMission> completed = userMissionRepository.findAll().stream()
+                .filter(um -> um.getUser().getId().equals(userId))
+                .filter(um -> Boolean.TRUE.equals(um.getIsCompleted()))
+                .filter(um -> um.getWeekStart() != null)
                 .collect(Collectors.toList());
 
         if (completed.isEmpty()) return Collections.emptyList();
 
-        // weekStart 기준으로 그룹핑
-        Map<LocalDate, List<UserMission>> byWeek =
-                completed.stream()
-                        .collect(Collectors.groupingBy(UserMission::getWeekStart));
+        // 주별 그룹핑
+        Map<LocalDate, List<UserMission>> byWeekStart = completed.stream()
+                .collect(Collectors.groupingBy(UserMission::getWeekStart));
 
-        // 최근 주 먼저 정렬
-        return byWeek.entrySet().stream()
+        // 최신 주부터 반환
+        return byWeekStart.entrySet().stream()
                 .sorted(Map.Entry.<LocalDate, List<UserMission>>comparingByKey().reversed())
                 .map(entry -> {
                     LocalDate weekStart = entry.getKey();
@@ -126,22 +169,24 @@ public class MissionService {
                 .collect(Collectors.toList());
     }
 
-    // 공통 변환
-    private MissionProgressDto toDto(UserMission um) {
-        int totalCount = um.getMission().getTotalCount();
-        int done = um.getDoneCount();
+    private MissionProgressDto toDto(UserMission userMission) {
 
-        int progress = (int) Math.round((done * 100.0) / totalCount);
+        int totalCount = userMission.getMission().getTotalCount();
+        int doneCount = userMission.getDoneCount();
+
+        int progress = (totalCount == 0)
+                ? 0
+                : (int) Math.round(doneCount * 100.0 / totalCount);
 
         return MissionProgressDto.builder()
-                .userMissionId(um.getUsermissionId())
-                .missionId(um.getMission().getMissionId())
-                .missionContent(um.getMission().getMissionContent())
-                .missionLevel(um.getMission().getMissionLevel())
+                .userMissionId(userMission.getUsermissionId())
+                .missionId(userMission.getMission().getMissionId())
+                .missionContent(userMission.getMission().getMissionContent())
+                .missionLevel(userMission.getMission().getMissionLevel())
                 .totalCount(totalCount)
-                .doneCount(done)
+                .doneCount(doneCount)
                 .progress(progress)
-                .completed(um.getIsCompleted())
+                .completed(userMission.getIsCompleted())
                 .build();
     }
 }

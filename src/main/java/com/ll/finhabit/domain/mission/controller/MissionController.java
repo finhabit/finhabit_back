@@ -16,22 +16,23 @@ public class MissionController {
 
     private final MissionService missionService;
 
-    // 오늘의 미션 + 진행률
-    @GetMapping
-    public MissionTodayResponse getMissionOverview(@RequestParam("userId") Long userId) {
+    @GetMapping("/{userId}")
+    public MissionTodayResponse getTodayMission(@PathVariable Long userId) {
         return missionService.getMissionToday(userId);
     }
 
-    // 미션 체크
-    @PostMapping("/{userMissionId}/check")
-    public MissionProgressDto checkMission(@PathVariable("userMissionId") Long userMissionId,
-                                           @RequestParam("userId") Long userId) {
+    @PostMapping("/{userId}/{userMissionId}/check")
+    public MissionProgressDto checkMission(
+            @PathVariable Long userId,
+            @PathVariable Long userMissionId
+    ) {
         return missionService.checkMission(userId, userMissionId);
     }
 
-    // 완료 미션 아카이브
-    @GetMapping("/archive")
-    public List<MissionArchiveResponse> getMissionArchive(@RequestParam("userId") Long userId) {
+    @GetMapping("/{userId}/archive")
+    public List<MissionArchiveResponse> getMissionArchive(
+            @PathVariable Long userId
+    ) {
         return missionService.getMissionArchive(userId);
     }
 }

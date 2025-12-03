@@ -42,4 +42,7 @@ public class UserMission {
 
     @Column(name = "week_start")
     private LocalDate weekStart;
+
+    @Column(name = "assigned_date")
+    private LocalDate assignedDate;
 }

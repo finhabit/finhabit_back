@@ -9,21 +9,32 @@ import java.util.Optional;
 
 public interface UserMissionRepository extends JpaRepository<UserMission, Long> {
 
+    // 오늘 이미 배정된 미션 있는지
+    Optional<UserMission> findByUser_IdAndAssignedDate(Long userId, LocalDate assignedDate);
+
+    // 이번 주에 특정 미션 템플릿이 몇 번이나 배정되었는지
+    long countByUser_IdAndMission_MissionIdAndWeekStart(
+            Long userId,
+            Long missionId,
+            LocalDate weekStart
+    );
+
     // 이번 주 + 미완료 미션 조회
-    List<UserMission> findByUser_UserIdAndWeekStartAndIsCompletedFalseOrderByUsermissionIdAsc(
+    List<UserMission> findByUser_IdAndWeekStartAndIsCompletedFalseOrderByUsermissionIdAsc(
             Long userId,
             LocalDate weekStart
     );
 
-    // 이번 주 + 미완료 미션 중 첫 번째
-    Optional<UserMission> findFirstByUser_UserIdAndWeekStartAndIsCompletedFalseOrderByUsermissionIdAsc(
+    // 이번 주 + 미완료 미션 중 첫 번째(오늘의 미션)
+    Optional<UserMission> findFirstByUser_IdAndWeekStartAndIsCompletedFalseOrderByUsermissionIdAsc(
             Long userId,
             LocalDate weekStart
     );
 
-    // 이번 주 + 완료된 미션 조회
-    List<UserMission> findByUser_UserIdAndWeekStartAndIsCompletedTrueOrderByCompletedAtDesc(
+    // 이번 주 + 완료된 미션 조회(아카이브)
+    List<UserMission> findByUser_IdAndWeekStartAndIsCompletedTrueOrderByCompletedAtDesc(
             Long userId,
             LocalDate weekStart
     );
 }
+

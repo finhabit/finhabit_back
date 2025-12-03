@@ -100,7 +100,7 @@ public class AuthService {
         int correctRate = (int) Math.round(correctCount * 100.0 / TOTAL_QUESTIONS);
 
         return SignupResponse.builder()
-                .id(saved.getUserId())
+                .id(saved.getId())
                 .nickname(saved.getNickname())
                 .email(saved.getEmail())
                 .level(saved.getLevel())
@@ -125,7 +125,7 @@ public class AuthService {
         }
 
         return LoginResponse.builder()
-                .id(user.getUserId())
+                .id(user.getId())
                 .nickname(user.getNickname())
                 .email(user.getEmail())
                 .level(user.getLevel())
