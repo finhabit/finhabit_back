@@ -8,12 +8,13 @@ import com.ll.finhabit.domain.auth.repository.LevelTestRepository;
 import com.ll.finhabit.domain.auth.repository.UserLevelRepository;
 import com.ll.finhabit.domain.auth.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -99,7 +100,7 @@ public class AuthService {
         int correctRate = (int) Math.round(correctCount * 100.0 / TOTAL_QUESTIONS);
 
         return SignupResponse.builder()
-                .id(saved.getId())
+                .id(saved.getUserId())
                 .nickname(saved.getNickname())
                 .email(saved.getEmail())
                 .level(saved.getLevel())
@@ -124,7 +125,7 @@ public class AuthService {
         }
 
         return LoginResponse.builder()
-                .id(user.getId())
+                .id(user.getUserId())
                 .nickname(user.getNickname())
                 .email(user.getEmail())
                 .level(user.getLevel())
