@@ -29,13 +29,14 @@ public class MissionService {
     private final MissionRepository missionRepository;
     private final UserRepository userRepository;
 
+    // 오늘의 미션 가져오기
     @Transactional
     public MissionTodayResponse getMissionToday(Long userId) {
 
         LocalDate today = LocalDate.now();
         LocalDate thisMonday = today.with(DayOfWeek.MONDAY);
 
-        // 1) 오늘 이미 배정된 미션 있으면 그거 그대로 반환
+        // 오늘 이미 배정된 미션 있으면 그거 그대로 반환
         UserMission todayMission = userMissionRepository
                 .findByUser_IdAndAssignedDate(userId, today)
                 .orElse(null);
@@ -47,11 +48,11 @@ public class MissionService {
         }
 
 
-        // 유저 가져오기 (필요하면)
+        // 유저 가져오기
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
 
-        // 모든 미션 템플릿 가져오기 (레벨 필터링 등은 나중에 추가 가능)
+        // 모든 미션 템플릿 가져오기
         List<Mission> allMissions = missionRepository.findAll();
 
         // 이번 주에 quota가 남은 미션만 후보로 필터링
@@ -98,6 +99,7 @@ public class MissionService {
     }
 
 
+    // 미션 수행 체크 버튼
     @Transactional
     public MissionProgressDto checkMission(Long userId, Long userMissionId) {
 
@@ -135,6 +137,7 @@ public class MissionService {
         return toDto(userMission);
     }
 
+    // 미션 완료 아카이브
     public List<MissionArchiveResponse> getMissionArchive(Long userId) {
 
         List<UserMission> completed = userMissionRepository.findAll().stream()
@@ -169,14 +172,13 @@ public class MissionService {
                 .collect(Collectors.toList());
     }
 
+    // 디티오 반환
     private MissionProgressDto toDto(UserMission userMission) {
 
         int totalCount = userMission.getMission().getTotalCount();
         int doneCount = userMission.getDoneCount();
 
-        int progress = (totalCount == 0)
-                ? 0
-                : (int) Math.round(doneCount * 100.0 / totalCount);
+        int progress = (totalCount == 0) ? 0 : (int) Math.round(doneCount * 100.0 / totalCount);
 
         return MissionProgressDto.builder()
                 .userMissionId(userMission.getUsermissionId())
