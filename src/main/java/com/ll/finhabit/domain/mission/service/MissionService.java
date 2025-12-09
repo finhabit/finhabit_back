@@ -8,10 +8,6 @@ import com.ll.finhabit.domain.mission.entity.Mission;
 import com.ll.finhabit.domain.mission.entity.UserMission;
 import com.ll.finhabit.domain.mission.repository.MissionRepository;
 import com.ll.finhabit.domain.mission.repository.UserMissionRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -19,6 +15,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -47,7 +48,10 @@ public class MissionService {
         var user =
                 userRepository
                         .findById(userId)
-                        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다."));
 
         int userLevel = user.getLevel();
 
@@ -101,7 +105,10 @@ public class MissionService {
         UserMission userMission =
                 userMissionRepository
                         .findById(userMissionId)
-                        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저 미션입니다."));
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "존재하지 않는 유저 미션입니다."));
 
         // 소유자 검사
         if (!userMission.getUser().getId().equals(userId)) {
@@ -175,6 +182,14 @@ public class MissionService {
     // 미션 완료 아카이브
     @Transactional(readOnly = true)
     public List<MissionArchiveResponse> getMissionArchive(Long userId) {
+
+        var user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다."));
 
         List<UserMission> completed =
                 userMissionRepository.findAll().stream()
