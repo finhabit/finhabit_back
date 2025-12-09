@@ -2,9 +2,8 @@ package com.ll.finhabit.domain.mission.entity;
 
 import com.ll.finhabit.domain.auth.entity.User;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDate;
+import lombok.*;
 
 @Entity
 @Table(name = "usermission")

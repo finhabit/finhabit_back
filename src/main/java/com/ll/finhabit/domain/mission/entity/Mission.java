@@ -24,5 +24,5 @@ public class Mission {
     private Integer missionLevel;
 
     @Column(name = "total_count", nullable = false)
-    private Integer totalCount;    // 총 수행 횟수
+    private Integer totalCount; // 총 수행 횟수
 }

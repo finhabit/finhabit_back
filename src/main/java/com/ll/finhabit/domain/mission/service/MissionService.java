@@ -8,10 +8,6 @@ import com.ll.finhabit.domain.mission.entity.Mission;
 import com.ll.finhabit.domain.mission.entity.UserMission;
 import com.ll.finhabit.domain.mission.repository.MissionRepository;
 import com.ll.finhabit.domain.mission.repository.UserMissionRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -19,10 +15,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class MissionService {
 
     private final UserMissionRepository userMissionRepository;
@@ -30,81 +28,79 @@ public class MissionService {
     private final UserRepository userRepository;
 
     // 오늘의 미션 가져오기
-    @Transactional
+    @Transactional(readOnly = true)
     public MissionTodayResponse getMissionToday(Long userId) {
 
         LocalDate today = LocalDate.now();
         LocalDate thisMonday = today.with(DayOfWeek.MONDAY);
 
-        // 오늘 이미 배정된 미션 있으면 그거 그대로 반환
-        UserMission todayMission = userMissionRepository
-                .findByUser_IdAndAssignedDate(userId, today)
-                .orElse(null);
+        // 오늘 이미 배정된 미션 있으면 그대로 반환
+        UserMission todayMission =
+                userMissionRepository.findByUser_IdAndAssignedDate(userId, today).orElse(null);
 
         if (todayMission != null) {
-            return MissionTodayResponse.builder()
-                    .todayMission(toDto(todayMission))
-                    .build();
+            return MissionTodayResponse.builder().todayMission(toDto(todayMission)).build();
         }
-
 
         // 유저 가져오기
-        var user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+        var user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
 
-        // 모든 미션 템플릿 가져오기
-        List<Mission> allMissions = missionRepository.findAll();
+        int userLevel = user.getLevel();
 
-        // 이번 주에 quota가 남은 미션만 후보로 필터링
-        List<Mission> candidates = allMissions.stream()
-                .filter(mission -> {
-                    long assignedThisWeek = userMissionRepository
-                            .countByUser_IdAndMission_MissionIdAndWeekStart(
-                                    userId,
-                                    mission.getMissionId(),
-                                    thisMonday
-                            );
-                    return assignedThisWeek < mission.getTotalCount(); // totalCount만큼까지만 허용
-                })
-                .toList();
+        List<Mission> allMissions = missionRepository.findByMissionLevelLessThanEqual(userLevel);
+
+        // 이번 주에 횟수가 남은 미션만 후보로 필터링
+        List<Mission> candidates =
+                allMissions.stream()
+                        .filter(
+                                mission -> {
+                                    long assignedThisWeek =
+                                            userMissionRepository
+                                                    .countByUser_IdAndMission_MissionIdAndWeekStart(
+                                                            userId,
+                                                            mission.getMissionId(),
+                                                            thisMonday);
+                                    // 각 미션별 totalCount 이하까지만 허용
+                                    return assignedThisWeek < mission.getTotalCount();
+                                })
+                        .toList();
 
         if (candidates.isEmpty()) {
-            // 이번 주에 더 배정할 미션이 없다면 오늘 미션 없음
-            return MissionTodayResponse.builder()
-                    .todayMission(null)
-                    .build();
+            return MissionTodayResponse.builder().todayMission(null).build();
         }
 
-        // 랜덤으로 1개 선택
+        // 랜덤 선택 + UserMission 생성
         int idx = new Random().nextInt(candidates.size());
         Mission chosen = candidates.get(idx);
 
-        // UserMission 생성 (오늘 배정)
-        UserMission newUserMission = UserMission.builder()
-                .user(user)
-                .mission(chosen)
-                .isCompleted(false)
-                .doneCount(0)
-                .progress(0)
-                .weekStart(thisMonday)
-                .assignedDate(today)
-                .completedAt(null)
-                .build();
+        UserMission newUserMission =
+                UserMission.builder()
+                        .user(user)
+                        .mission(chosen)
+                        .isCompleted(false)
+                        .doneCount(0)
+                        .progress(0)
+                        .weekStart(thisMonday)
+                        .assignedDate(today)
+                        .completedAt(null)
+                        .build();
 
         todayMission = userMissionRepository.save(newUserMission);
 
-        return MissionTodayResponse.builder()
-                .todayMission(toDto(todayMission))
-                .build();
+        return MissionTodayResponse.builder().todayMission(toDto(todayMission)).build();
     }
-
 
     // 미션 수행 체크 버튼
     @Transactional
     public MissionProgressDto checkMission(Long userId, Long userMissionId) {
 
-        UserMission userMission = userMissionRepository.findById(userMissionId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저 미션입니다."));
+        UserMission userMission =
+                userMissionRepository
+                        .findById(userMissionId)
+                        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저 미션입니다."));
 
         // 소유자 검사
         if (!userMission.getUser().getId().equals(userId)) {
@@ -137,38 +133,80 @@ public class MissionService {
         return toDto(userMission);
     }
 
+    // 수행 버튼 취소
+    @Transactional
+    public MissionProgressDto undoMissionCheck(Long userId, Long userMissionId) {
+
+        UserMission userMission =
+                userMissionRepository
+                        .findById(userMissionId)
+                        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저 미션입니다."));
+
+        // 소유자 검사
+        if (!userMission.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("해당 미션에 대한 권한이 없습니다.");
+        }
+
+        int currentDone = userMission.getDoneCount();
+
+        // 이미 0이면 더 줄일 수 없음
+        if (currentDone <= 0) {
+            return toDto(userMission);
+        }
+
+        int newDoneCount = currentDone - 1;
+        int totalCount = userMission.getMission().getTotalCount();
+
+        userMission.setDoneCount(newDoneCount);
+
+        int progress = (int) Math.round((newDoneCount * 100.0) / totalCount);
+        userMission.setProgress(progress);
+
+        // 만약 완료 상태였는데, 되돌아갔다면 완료 해제
+        if (newDoneCount < totalCount) {
+            userMission.setIsCompleted(false);
+            userMission.setCompletedAt(null);
+        }
+
+        return toDto(userMission);
+    }
+
     // 미션 완료 아카이브
+    @Transactional(readOnly = true)
     public List<MissionArchiveResponse> getMissionArchive(Long userId) {
 
-        List<UserMission> completed = userMissionRepository.findAll().stream()
-                .filter(um -> um.getUser().getId().equals(userId))
-                .filter(um -> Boolean.TRUE.equals(um.getIsCompleted()))
-                .filter(um -> um.getWeekStart() != null)
-                .collect(Collectors.toList());
+        List<UserMission> completed =
+                userMissionRepository.findAll().stream()
+                        .filter(um -> um.getUser().getId().equals(userId))
+                        .filter(um -> Boolean.TRUE.equals(um.getIsCompleted()))
+                        .filter(um -> um.getWeekStart() != null)
+                        .collect(Collectors.toList());
 
         if (completed.isEmpty()) return Collections.emptyList();
 
         // 주별 그룹핑
-        Map<LocalDate, List<UserMission>> byWeekStart = completed.stream()
-                .collect(Collectors.groupingBy(UserMission::getWeekStart));
+        Map<LocalDate, List<UserMission>> byWeekStart =
+                completed.stream().collect(Collectors.groupingBy(UserMission::getWeekStart));
 
         // 최신 주부터 반환
         return byWeekStart.entrySet().stream()
                 .sorted(Map.Entry.<LocalDate, List<UserMission>>comparingByKey().reversed())
-                .map(entry -> {
-                    LocalDate weekStart = entry.getKey();
-                    LocalDate weekEnd = weekStart.plusDays(6);
+                .map(
+                        entry -> {
+                            LocalDate weekStart = entry.getKey();
+                            LocalDate weekEnd = weekStart.plusDays(6);
 
-                    List<MissionProgressDto> missionDtos = entry.getValue().stream()
-                            .map(this::toDto)
-                            .collect(Collectors.toList());
+                            List<MissionProgressDto> missionDtos =
+                                    entry.getValue().stream()
+                                            .map(this::toDto)
+                                            .collect(Collectors.toList());
 
-                    return MissionArchiveResponse.builder()
-                            .weekStart(weekStart)
-                            .weekEnd(weekEnd)
-                            .missions(missionDtos)
-                            .build();
-                })
+                            return MissionArchiveResponse.builder()
+                                    .weekStart(weekStart)
+                                    .weekEnd(weekEnd)
+                                    .missions(missionDtos)
+                                    .build();
+                        })
                 .collect(Collectors.toList());
     }
 
