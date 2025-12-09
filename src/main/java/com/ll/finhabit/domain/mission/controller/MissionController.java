@@ -4,9 +4,10 @@ import com.ll.finhabit.domain.mission.dto.MissionArchiveResponse;
 import com.ll.finhabit.domain.mission.dto.MissionProgressDto;
 import com.ll.finhabit.domain.mission.dto.MissionTodayResponse;
 import com.ll.finhabit.domain.mission.service.MissionService;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor

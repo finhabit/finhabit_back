@@ -8,6 +8,10 @@ import com.ll.finhabit.domain.mission.entity.Mission;
 import com.ll.finhabit.domain.mission.entity.UserMission;
 import com.ll.finhabit.domain.mission.repository.MissionRepository;
 import com.ll.finhabit.domain.mission.repository.UserMissionRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -15,9 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -162,7 +163,7 @@ public class MissionService {
         int progress = (int) Math.round((newDoneCount * 100.0) / totalCount);
         userMission.setProgress(progress);
 
-        // 만약 완료 상태였는데, 되돌아갔다면 완료 해제
+        // 완료 취소시 완료 상태 false로 변경
         if (newDoneCount < totalCount) {
             userMission.setIsCompleted(false);
             userMission.setCompletedAt(null);
@@ -210,7 +211,7 @@ public class MissionService {
                 .collect(Collectors.toList());
     }
 
-    // 디티오 반환
+    // 디티오 메서드
     private MissionProgressDto toDto(UserMission userMission) {
 
         int totalCount = userMission.getMission().getTotalCount();
