@@ -44,4 +44,6 @@ public class UserMission {
 
     @Column(name = "assigned_date")
     private LocalDate assignedDate;
+
+    @Version private Long version;
 }

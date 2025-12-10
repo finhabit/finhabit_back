@@ -11,7 +11,6 @@ public class MissionProgressDto {
 
     private Long missionId;
     private String missionContent;
-    private Integer missionPoint;
     private Integer missionLevel;
 
     private Integer totalCount; // 목표 횟수
