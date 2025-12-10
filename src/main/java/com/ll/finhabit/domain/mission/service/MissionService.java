@@ -148,7 +148,10 @@ public class MissionService {
         UserMission userMission =
                 userMissionRepository
                         .findById(userMissionId)
-                        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저 미션입니다."));
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "존재하지 않는 유저 미션입니다."));
 
         // 소유자 검사
         if (!userMission.getUser().getId().equals(userId)) {
