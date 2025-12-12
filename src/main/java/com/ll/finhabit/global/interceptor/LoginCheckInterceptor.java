@@ -15,12 +15,16 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
     public boolean preHandle(
             HttpServletRequest request, HttpServletResponse response, Object handler) {
 
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+
         HttpSession session = request.getSession(false);
 
         if (session == null || session.getAttribute("LOGIN_USER_ID") == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
 
-        return true; // 로그인 되어 있으면 통과
+        return true;
     }
 }
