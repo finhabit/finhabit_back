@@ -10,5 +10,4 @@ public class LoginResponse {
     private String nickname;
     private String email;
     private Integer level;
-    private Integer userPoint;
 }
