@@ -1,11 +1,12 @@
-package com.ll.finhabit.global.config;
+package com.ll.finhabit.config;
 
-import com.ll.finhabit.global.interceptor.LoginCheckInterceptor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import com.ll.finhabit.global.interceptor.LoginCheckInterceptor;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @RequiredArgsConstructor
