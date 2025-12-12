@@ -6,20 +6,4 @@ services:
       - .env.prod     # 실제 서버에서 제공
     ports:
       - "80:8080"
-    depends_on:
-      - finhabit-mysql
-    restart: unless-stopped
-
-  finhabit-mysql:
-    image: mysql:8.0.43
-    container_name: finhabit-mysql
-    env_file:
-      - .env.prod
-    command: [
-      "--default-authentication-plugin=caching_sha2_password",
-      "--character-set-server=utf8mb4",
-      "--collation-server=utf8mb4_unicode_ci"
-    ]
-    volumes:
-      - ./_vol/mysql:/var/lib/mysql
     restart: unless-stopped
