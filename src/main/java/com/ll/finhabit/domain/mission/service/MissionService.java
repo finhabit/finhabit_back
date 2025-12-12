@@ -69,23 +69,30 @@ public class MissionService {
             List<UserMission> thisWeekMissions =
                     userMissionRepository.findByUser_IdAndWeekStart(userId, thisMonday);
 
-            // missionId 기준으로 이번 주 배정 횟수 카운팅
-            Map<Long, Long> assignedCountByMissionId =
+            // missionId -> UserMission 매핑
+            Map<Long, UserMission> userMissionByMissionId =
                     thisWeekMissions.stream()
                             .collect(
-                                    Collectors.groupingBy(
+                                    Collectors.toMap(
                                             um -> um.getMission().getMissionId(),
-                                            Collectors.counting()));
+                                            um -> um,
+                                            (a, b) -> a // 혹시라도 중복 있으면 첫 번째만 사용
+                                            ));
 
             // 이번 주에 아직 여유가 남아 있는 미션만 후보로 필터링
             List<Mission> candidates =
                     allMissions.stream()
                             .filter(
                                     mission -> {
-                                        long assignedThisWeek =
-                                                assignedCountByMissionId.getOrDefault(
-                                                        mission.getMissionId(), 0L);
-                                        return assignedThisWeek < mission.getTotalCount();
+                                        UserMission um =
+                                                userMissionByMissionId.get(mission.getMissionId());
+                                        if (um == null) {
+                                            // 이번 주에 아직 한 번도 안 받은 미션 -> 후보
+                                            return true;
+                                        }
+                                        int totalCount = mission.getTotalCount();
+                                        // doneCount < totalCount 인 동안은 계속 후보
+                                        return um.getDoneCount() < totalCount;
                                     })
                             .toList();
 
@@ -97,27 +104,36 @@ public class MissionService {
             int idx = ThreadLocalRandom.current().nextInt(candidates.size());
             Mission chosen = candidates.get(idx);
 
-            UserMission newUserMission =
-                    UserMission.builder()
-                            .user(user)
-                            .mission(chosen)
-                            .isCompleted(false)
-                            .doneCount(0)
-                            .progress(0)
-                            .weekStart(thisMonday)
-                            .assignedDate(today)
-                            .completedAt(null)
-                            .build();
+            // 이 미션에 대한 이번 주 UserMission이 이미 있으면 재사용, 없으면 새로 생성
+            UserMission userMission = userMissionByMissionId.get(chosen.getMissionId());
 
-            todayMission = userMissionRepository.save(newUserMission);
+            if (userMission == null) {
+                // 이번 주 첫 배정
+                userMission =
+                        UserMission.builder()
+                                .user(user)
+                                .mission(chosen)
+                                .isCompleted(false)
+                                .doneCount(0)
+                                .progress(0)
+                                .weekStart(thisMonday)
+                                .assignedDate(today) // 첫 배정 날짜
+                                .completedAt(null)
+                                .build();
+            } else {
+                // 이미 존재하는 주간 미션을 오늘의 미션으로 다시 보여주는 것
+                userMission.setAssignedDate(today); // 이 줄은 선택사항
+            }
+
+            todayMission = userMissionRepository.save(userMission);
 
             return MissionTodayResponse.builder().todayMission(toDto(todayMission)).build();
 
         } catch (DataIntegrityViolationException e) {
-            // 동시 요청으로 중복 생성 시도 시, 다시 조회해서 반환
+            // 동시 요청으로 중복 생성 시도 시 다시 조회해서 반환
             UserMission todayMission =
                     userMissionRepository
-                            .findByUser_IdAndAssignedDate(userId, LocalDate.now())
+                            .findByUser_IdAndAssignedDate(userId, today)
                             .orElseThrow(
                                     () ->
                                             new ResponseStatusException(

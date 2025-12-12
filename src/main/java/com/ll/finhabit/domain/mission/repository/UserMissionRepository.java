@@ -32,4 +32,7 @@ public interface UserMissionRepository extends JpaRepository<UserMission, Long> 
 
     // 아카이브 전체 조회용: weekStart 있는 완료된 미션들
     List<UserMission> findByUser_IdAndIsCompletedTrueAndWeekStartIsNotNull(Long userId);
+
+    Optional<UserMission> findByUser_IdAndMission_MissionIdAndWeekStart(
+            Long userId, Long missionId, LocalDate weekStart);
 }
