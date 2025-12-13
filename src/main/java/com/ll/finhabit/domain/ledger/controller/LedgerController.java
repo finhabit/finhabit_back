@@ -6,10 +6,11 @@ import com.ll.finhabit.global.common.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,6 +29,7 @@ public class LedgerController {
                     로그인한 사용자 기준으로 수입/지출 내역을 생성합니다.<br>
                     요청 바디의 date를 비우거나 null로 보내면 서버에서 오늘 날짜(LocalDate.now())로 처리하도록
                     서비스/DTO 쪽에서 기본값을 줄 수 있습니다.
+                    payment는 CARD / CASH / ETC
                     """)
     public LedgerResponse createLedger(
             @Parameter(hidden = true) @CurrentUser Long userId,
