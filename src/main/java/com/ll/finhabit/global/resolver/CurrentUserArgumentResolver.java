@@ -15,8 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Component
 public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolver {
 
-    private static final String LOGIN_USER_ID =
-            "LOGIN_USER_ID"; // 세션 키 이름, AuthController와 동일해야 함
+    private static final String LOGIN_USER_ID = "LOGIN_USER_ID"; // 세션 키 이름, AuthController와 동일해야 함
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
