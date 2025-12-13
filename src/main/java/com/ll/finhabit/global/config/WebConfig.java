@@ -17,7 +17,10 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 // 배포 도메인
-                .allowedOrigins("https://finhabit.shop")
+                .allowedOrigins(
+                        "https://finhabit.shop",
+                        "https://www.finhabit.shop"
+                )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);

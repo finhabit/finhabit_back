@@ -31,7 +31,7 @@ public class LedgerResponse {
                 .memo(ledger.getMemo())
                 .merchant(ledger.getMerchant())
                 .date(ledger.getDate())
-                .payment(ledger.getPayment())
+                .payment(ledger.getPayment().name())
                 .build();
     }
 }
