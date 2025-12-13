@@ -15,7 +15,7 @@ import java.time.LocalDate;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/ledger")
-@Tag(name = "Ledger", description = "가계부 관련 API")
+@Tag(name = "Ledger", description = "가계부 CRUD / 가계부 홈 / 가계부 캘린더")
 public class LedgerController {
 
     private final LedgerService ledgerService;
