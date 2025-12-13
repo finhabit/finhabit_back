@@ -1,10 +1,9 @@
 package com.ll.finhabit.domain.ledger.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.util.ArrayList;
 import java.util.List;
+import lombok.*;
 
 @Entity
 @Getter

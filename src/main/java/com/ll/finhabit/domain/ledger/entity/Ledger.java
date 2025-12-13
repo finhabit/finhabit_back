@@ -2,9 +2,8 @@ package com.ll.finhabit.domain.ledger.entity;
 
 import com.ll.finhabit.domain.auth.entity.User;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDate;
+import lombok.*;
 
 @Entity
 @Getter
@@ -29,9 +28,6 @@ public class Ledger {
     @Column(nullable = false)
     private Integer amount;
 
-    @Column(columnDefinition = "TEXT")
-    private String memo;
-
     @Column(nullable = false, length = 30)
     private String merchant; // 돈 쓴 곳
 
@@ -39,6 +35,6 @@ public class Ledger {
     private LocalDate date;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
+    @Column(length = 10)
     private PaymentType payment;
 }
