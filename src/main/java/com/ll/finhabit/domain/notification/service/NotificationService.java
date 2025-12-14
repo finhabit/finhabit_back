@@ -25,8 +25,21 @@ public class NotificationService {
     private final UserMissionRepository userMissionRepository;
     private final NotificationSettingRepository notificationSettingRepository;
 
+    @Transactional(readOnly = true)
     public NotificationResponse getMissionCard(Long userId) {
-        if (!isNotificationEnabled(userId)) return offCard();
+
+        System.out.println("server today = " + LocalDate.now());
+        System.out.println("userId = " + userId);
+
+
+        if (!isNotificationEnabled(userId)) {
+            return NotificationResponse.builder()
+                    .type(NotificationType.MISSION)
+                    .title("알림이 꺼져있어요")
+                    .message("설정에서 알림을 켜면 다시 받을 수 있어요.")
+                    .createdAt(LocalDateTime.now())
+                    .build();
+        }
 
         LocalDate today = LocalDate.now();
 
@@ -34,10 +47,18 @@ public class NotificationService {
                 .findByUser_IdAndAssignedDate(userId, today)
                 .orElse(null);
 
-        boolean completed =
-                todayMission != null && Boolean.TRUE.equals(todayMission.getIsCompleted());
+        // 오늘 미션 자체가 없으면 리마인드
+        if (todayMission == null) {
+            return NotificationResponse.builder()
+                    .type(NotificationType.MISSION)
+                    .title("미션 리마인드")
+                    .message("오늘의 미션이 아직 남았어요 😅 한 번 도전해볼까요?")
+                    .createdAt(LocalDateTime.now())
+                    .build();
+        }
 
-        if (completed) {
+        // ✅ “체크 버튼 누름” 기준
+        if (todayMission.getDoneCount() != null && todayMission.getDoneCount() > 0) {
             return NotificationResponse.builder()
                     .type(NotificationType.MISSION)
                     .title("👏 오늘도 성공!")
@@ -49,10 +70,13 @@ public class NotificationService {
         return NotificationResponse.builder()
                 .type(NotificationType.MISSION)
                 .title("미션 리마인드")
-                .message("오늘의 미션이 아직 남았어요 😅 한 번만 더 도전해볼까요?")
+                .message("오늘의 미션이 아직 남았어요 😅 한 번 도전해볼까요?")
                 .createdAt(LocalDateTime.now())
                 .build();
     }
+
+
+
 
     public NotificationResponse getLearningCard(Long userId) {
         if (!isNotificationEnabled(userId)) return offCard();

@@ -1,6 +1,5 @@
 package com.ll.finhabit.domain.notification.controller;
 
-import com.ll.finhabit.domain.auth.entity.User;
 import com.ll.finhabit.domain.notification.dto.FeedbackNotificationRequest;
 import com.ll.finhabit.domain.notification.dto.NotificationResponse;
 import com.ll.finhabit.domain.notification.dto.NotificationSettingResponse;
@@ -33,8 +32,10 @@ public class NotificationController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
     })
     @GetMapping("/mission")
-    public NotificationResponse mission(@CurrentUser @Parameter(hidden = true) User user) {
-        return notificationService.getMissionCard(user.getId());
+    public NotificationResponse mission(
+            @CurrentUser @io.swagger.v3.oas.annotations.Parameter(hidden = true) Long userId
+    ) {
+        return notificationService.getMissionCard(userId);
     }
 
     @Operation(
@@ -46,8 +47,10 @@ public class NotificationController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
     })
     @GetMapping("/finance")
-    public NotificationResponse finance(@CurrentUser @Parameter(hidden = true) User user) {
-        return notificationService.getLearningCard(user.getId());
+    public NotificationResponse finance(
+            @CurrentUser @Parameter(hidden = true) Long userId
+    ) {
+        return notificationService.getLearningCard(userId);
     }
 
     @Operation(
@@ -61,22 +64,17 @@ public class NotificationController {
     })
     @PostMapping("/feedback")
     public NotificationResponse feedback(
-            @CurrentUser @Parameter(hidden = true) User user,
+            @CurrentUser @Parameter(hidden = true) Long userId,
             @RequestBody FeedbackNotificationRequest request
     ) {
-        return notificationService.getFeedbackCard(user.getId(), request);
+        return notificationService.getFeedbackCard(userId, request);
     }
 
-    @Operation(
-            summary = "알림 전체 토글",
-            description = "알림 설정을 ON/OFF로 반전합니다."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "토글 성공 (현재 enabled 상태 반환)"),
-            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
-    })
     @PatchMapping("/settings/toggle")
-    public NotificationSettingResponse toggle(@CurrentUser @Parameter(hidden = true) User user) {
-        return notificationSettingService.toggle(user.getId());
+    public NotificationSettingResponse toggle(
+            @CurrentUser @Parameter(hidden = true) Long userId
+    ) {
+        return notificationSettingService.toggle(userId);
     }
+
 }
