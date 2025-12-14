@@ -9,13 +9,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SwaggerConfig {
 
-    // Swagger UI 기본 그룹 설정
     @Bean
     public GroupedOpenApi api() {
         return GroupedOpenApi.builder().group("finhabit").pathsToMatch("/api/**").build();
     }
 
-    // Swagger UI 프로퍼티 주입
     @Bean
     public SwaggerUiConfigParameters swaggerUiConfigParameters(
             SwaggerUiConfigProperties swaggerUiConfigProperties) {
