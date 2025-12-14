@@ -1,19 +1,23 @@
 package com.ll.finhabit.domain.finance.controller;
 
-import com.ll.finhabit.domain.finance.dto.FinanceCardDto;
-import com.ll.finhabit.domain.finance.entity.DailyFinance;
-import com.ll.finhabit.domain.finance.service.FinanceService;
-import com.ll.finhabit.global.common.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.ll.finhabit.domain.finance.dto.FinanceCardDto;
+import com.ll.finhabit.domain.finance.entity.DailyFinance;
+import com.ll.finhabit.domain.finance.service.FinanceService;
+import com.ll.finhabit.global.common.CurrentUser;
 
 @Tag(name = "Finance", description = "금융 지식 (카드) 및 사용자 열람 기록 관리 API")
 @RestController
@@ -77,7 +81,6 @@ public class FinanceController {
             summary = "⚠️ [개발/확인용] 전체 금융 지식 카드 조회",
             description = "인증 없이(로그인 없이) DB에 저장된 모든 DailyFinance 카드를 Level 구분 없이 반환합니다. (테스트 용도)",
             responses = {@ApiResponse(responseCode = "200", description = "전체 목록 반환 성공")})
-    @Tag(name = "Development", description = "개발/테스트 용도의 API 그룹") // ✨ 태그를 분리하여 Development 그룹에 표시
     @GetMapping("/all")
     public ResponseEntity<List<DailyFinance>> getAllFinanceKnowledge() {
         List<DailyFinance> allCards = financeService.getAllDailyFinanceCards();
