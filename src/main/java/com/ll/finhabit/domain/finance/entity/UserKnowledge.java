@@ -2,33 +2,30 @@ package com.ll.finhabit.domain.finance.entity;
 
 import java.time.LocalDate;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "DailyFinance")
+@Table(name = "UserKnowledge")
 @Getter
 @Setter
-public class DailyFinance {
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserKnowledge {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private Integer financeId;
+    private Long userId;
 
-    @Column(columnDefinition = "TEXT")
-    private String cardContent;
-
-    @Column(length = 30)
-    private String cardTitle;
-
-    private Integer cardLevel;
-
-    private LocalDate createdDate;
+    private LocalDate opendDate;
+    private LocalDate viewedAt;
 }
