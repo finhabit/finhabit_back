@@ -16,13 +16,8 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/finance")
 @RequiredArgsConstructor
 public class FinanceController {
-
     private final FinanceService financeService;
 
-    /**
-     * GET /api/finance : 오늘의 금융 지식 조회 및 오픈
-     * @Parameter(hidden = true)를 통해 Swagger UI에서 이 파라미터 입력 필드를 숨깁니다.
-     */
     @GetMapping
     public ResponseEntity<FinanceCardDto> getTodayFinanceKnowledge(
             @Parameter(hidden = true) @CurrentUser Long userId) { // ✨ 수정
@@ -31,9 +26,6 @@ public class FinanceController {
         return ResponseEntity.ok(dto);
     }
 
-    /**
-     * GET /api/finance/week : 주간 모아보기
-     */
     @GetMapping("/week")
     public ResponseEntity<List<FinanceCardDto>> getWeeklyKnowledge(
             @Parameter(hidden = true) @CurrentUser Long userId) { // ✨ 수정
@@ -42,9 +34,6 @@ public class FinanceController {
         return ResponseEntity.ok(dtoList);
     }
 
-    /**
-     * GET /api/finance/month : 월간 모아보기
-     */
     @GetMapping("/month")
     public ResponseEntity<List<FinanceCardDto>> getMonthlyKnowledge(
             @Parameter(hidden = true) @CurrentUser Long userId) { // ✨ 수정

@@ -10,4 +10,5 @@ public interface UserKnowledgeRepository extends JpaRepository<UserKnowledge, Lo
     Optional<UserKnowledge> findByUserIdAndFinanceId(Long userId, Integer financeId);
     List<UserKnowledge> findByUserId(Long userId);
     List<UserKnowledge> findByUserIdAndOpendDateBetween(Long userId, LocalDate startDate, LocalDate endDate);
+    Optional<UserKnowledge> findByUserIdAndOpendDate(Long userId, LocalDate opendDate);
 }

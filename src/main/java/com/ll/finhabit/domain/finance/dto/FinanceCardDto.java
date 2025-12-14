@@ -13,7 +13,7 @@ public class FinanceCardDto {
     private Integer financeId;
     private String cardTitle;
     private String cardContent;
-    private Integer cardLevel; // ✨ Integer로 변경됨
+    private Integer cardLevel;
     private LocalDate opendDate;
 
     public FinanceCardDto(DailyFinance finance, UserKnowledge knowledge) {
