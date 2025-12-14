@@ -6,8 +6,8 @@ import lombok.*;
 @Entity
 @Table(
         name = "notification_setting",
-        uniqueConstraints = @UniqueConstraint(name = "uk_notification_setting_user", columnNames = "user_id")
-)
+        uniqueConstraints =
+                @UniqueConstraint(name = "uk_notification_setting_user", columnNames = "user_id"))
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -19,7 +19,7 @@ public class NotificationSetting {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="user_id", nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
     // ✅ 전체 알림 ON/OFF

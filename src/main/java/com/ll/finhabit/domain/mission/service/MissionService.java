@@ -9,14 +9,6 @@ import com.ll.finhabit.domain.mission.entity.UserMission;
 import com.ll.finhabit.domain.mission.repository.MissionRepository;
 import com.ll.finhabit.domain.mission.repository.UserMissionRepository;
 import jakarta.persistence.OptimisticLockException;
-import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -24,6 +16,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -185,7 +184,6 @@ public class MissionService {
             }
             userMissionRepository.flush();
 
-
             // JPA가 커밋 시 자동으로 version 체크
             return toDto(userMission);
 
@@ -193,7 +191,6 @@ public class MissionService {
             // 동시 요청 감지 시
             throw new ResponseStatusException(HttpStatus.CONFLICT, "다른 요청과 충돌했습니다. 다시 시도해주세요.");
         }
-
     }
 
     // 수행 버튼 취소

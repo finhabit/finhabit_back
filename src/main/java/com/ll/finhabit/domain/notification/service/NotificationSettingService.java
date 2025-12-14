@@ -15,18 +15,19 @@ public class NotificationSettingService {
     private final NotificationSettingRepository notificationSettingRepository;
 
     public NotificationSettingResponse toggle(Long userId) {
-        NotificationSetting setting = notificationSettingRepository.findByUserId(userId)
-                .orElseGet(() -> notificationSettingRepository.save(
-                        NotificationSetting.builder()
-                                .userId(userId)
-                                .enabled(true) // 기본값 ON
-                                .build()
-                ));
+        NotificationSetting setting =
+                notificationSettingRepository
+                        .findByUserId(userId)
+                        .orElseGet(
+                                () ->
+                                        notificationSettingRepository.save(
+                                                NotificationSetting.builder()
+                                                        .userId(userId)
+                                                        .enabled(true) // 기본값 ON
+                                                        .build()));
 
         setting.setEnabled(!setting.isEnabled());
 
-        return NotificationSettingResponse.builder()
-                .enabled(setting.isEnabled())
-                .build();
+        return NotificationSettingResponse.builder().enabled(setting.isEnabled()).build();
     }
 }

@@ -10,14 +10,13 @@ import com.ll.finhabit.domain.notification.dto.NotificationResponse;
 import com.ll.finhabit.domain.notification.entity.NotificationSetting;
 import com.ll.finhabit.domain.notification.entity.NotificationType;
 import com.ll.finhabit.domain.notification.repository.NotificationSettingRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,9 +33,8 @@ public class NotificationService {
 
         LocalDate today = LocalDate.now();
 
-        UserMission todayMission = userMissionRepository
-                .findByUser_IdAndAssignedDate(userId, today)
-                .orElse(null);
+        UserMission todayMission =
+                userMissionRepository.findByUser_IdAndAssignedDate(userId, today).orElse(null);
 
         if (todayMission == null) {
             return NotificationResponse.builder()
@@ -68,17 +66,24 @@ public class NotificationService {
     public NotificationResponse getLearningCard(Long userId) {
         if (!isNotificationEnabled(userId)) return offCard(NotificationType.LEARNING);
 
-        DailyFinance finance = dailyFinanceRepository
-                .findTopByCreatedDateOrderByIdDesc(LocalDate.now())
-                .orElseGet(() -> dailyFinanceRepository.findTopByOrderByCreatedDateDescIdDesc().orElse(null));
+        DailyFinance finance =
+                dailyFinanceRepository
+                        .findTopByCreatedDateOrderByIdDesc(LocalDate.now())
+                        .orElseGet(
+                                () ->
+                                        dailyFinanceRepository
+                                                .findTopByOrderByCreatedDateDescIdDesc()
+                                                .orElse(null));
 
-        String title = (finance == null || isBlank(finance.getCardTitle()))
-                ? "오늘의 금융 지식이 도착했어요!"
-                : finance.getCardTitle();
+        String title =
+                (finance == null || isBlank(finance.getCardTitle()))
+                        ? "오늘의 금융 지식이 도착했어요!"
+                        : finance.getCardTitle();
 
-        String message = (finance == null || isBlank(finance.getCardContent()))
-                ? "오늘의 금융 지식이 아직 준비되지 않았어요."
-                : finance.getCardContent();
+        String message =
+                (finance == null || isBlank(finance.getCardContent()))
+                        ? "오늘의 금융 지식이 아직 준비되지 않았어요."
+                        : finance.getCardContent();
 
         return NotificationResponse.builder()
                 .type(NotificationType.LEARNING)
@@ -87,7 +92,6 @@ public class NotificationService {
                 .createdAt(LocalDateTime.now())
                 .build();
     }
-
 
     public NotificationResponse getFeedbackCard(Long userId) {
         if (!isNotificationEnabled(userId)) return offCard(NotificationType.FEEDBACK);
@@ -101,30 +105,31 @@ public class NotificationService {
         LocalDate lastMonday = thisMonday.minusWeeks(1);
         LocalDate lastSunday = lastMonday.plusDays(6);
 
-        List<Ledger> thisWeekLedgers = expenseLedgers(
-                ledgerRepository.findAllByUser_IdAndDateBetween(userId, thisMonday, thisSunday)
-        );
-        List<Ledger> lastWeekLedgers = expenseLedgers(
-                ledgerRepository.findAllByUser_IdAndDateBetween(userId, lastMonday, lastSunday)
-        );
+        List<Ledger> thisWeekLedgers =
+                expenseLedgers(
+                        ledgerRepository.findAllByUser_IdAndDateBetween(
+                                userId, thisMonday, thisSunday));
+        List<Ledger> lastWeekLedgers =
+                expenseLedgers(
+                        ledgerRepository.findAllByUser_IdAndDateBetween(
+                                userId, lastMonday, lastSunday));
 
         int thisWeekTotal = sumAmount(thisWeekLedgers);
         int lastWeekTotal = sumAmount(lastWeekLedgers);
 
-        /**
-         * 우선순위:
-         * 1) 소비 급증(카테고리)
-         * 2) 주간 리포트(총액)
-         * 3) 월간 리포트(총액)
-         * 4) 기본
-         */
+        /** 우선순위: 1) 소비 급증(카테고리) 2) 주간 리포트(총액) 3) 월간 리포트(총액) 4) 기본 */
         // 소비 급증
         SpikeResult spike = detectSpike(thisWeekLedgers, lastWeekLedgers);
         if (spike != null) {
             return NotificationResponse.builder()
                     .type(NotificationType.FEEDBACK)
                     .title("소비 급증 알림")
-                    .message("⚠️ 이번 주 " + spike.categoryName + " 지출이 " + spike.diffText + " 계획 점검 어때요?")
+                    .message(
+                            "⚠️ 이번 주 "
+                                    + spike.categoryName
+                                    + " 지출이 "
+                                    + spike.diffText
+                                    + " 계획 점검 어때요?")
                     .createdAt(LocalDateTime.now())
                     .build();
         }
@@ -145,22 +150,26 @@ public class NotificationService {
         LocalDate firstDayLastMonth = firstDayThisMonth.minusMonths(1);
 
         LocalDate endDayLastMonth = firstDayLastMonth.plusDays(today.getDayOfMonth() - 1L);
-        LocalDate lastMonthLastDay = firstDayLastMonth.withDayOfMonth(firstDayLastMonth.lengthOfMonth());
+        LocalDate lastMonthLastDay =
+                firstDayLastMonth.withDayOfMonth(firstDayLastMonth.lengthOfMonth());
         if (endDayLastMonth.isAfter(lastMonthLastDay)) endDayLastMonth = lastMonthLastDay;
 
-        List<Ledger> thisMonthLedgers = expenseLedgers(
-                ledgerRepository.findAllByUser_IdAndDateBetween(userId, firstDayThisMonth, today)
-        );
-        List<Ledger> lastMonthLedgers = expenseLedgers(
-                ledgerRepository.findAllByUser_IdAndDateBetween(userId, firstDayLastMonth, endDayLastMonth)
-        );
+        List<Ledger> thisMonthLedgers =
+                expenseLedgers(
+                        ledgerRepository.findAllByUser_IdAndDateBetween(
+                                userId, firstDayThisMonth, today));
+        List<Ledger> lastMonthLedgers =
+                expenseLedgers(
+                        ledgerRepository.findAllByUser_IdAndDateBetween(
+                                userId, firstDayLastMonth, endDayLastMonth));
 
         int thisMonthTotal = sumAmount(thisMonthLedgers);
         int lastMonthTotal = sumAmount(lastMonthLedgers);
 
         if (thisMonthTotal > 0 || lastMonthTotal > 0) {
             int diff = thisMonthTotal - lastMonthTotal;
-            String msg = "지난달 대비 " + formatAmount(diff) + " (이번달 " + formatWon(thisMonthTotal) + ")";
+            String msg =
+                    "지난달 대비 " + formatAmount(diff) + " (이번달 " + formatWon(thisMonthTotal) + ")";
             return NotificationResponse.builder()
                     .type(NotificationType.FEEDBACK)
                     .title("월간 리포트")
@@ -178,10 +187,10 @@ public class NotificationService {
                 .build();
     }
 
-
     // helpers
     private boolean isNotificationEnabled(Long userId) {
-        return notificationSettingRepository.findByUserId(userId)
+        return notificationSettingRepository
+                .findByUserId(userId)
                 .map(NotificationSetting::isEnabled)
                 .orElse(true);
     }
@@ -220,9 +229,10 @@ public class NotificationService {
     private Map<String, Integer> sumByCategory(List<Ledger> ledgers) {
         Map<String, Integer> map = new HashMap<>();
         for (Ledger l : ledgers) {
-            String name = (l.getCategory() == null || l.getCategory().getCategoryName() == null)
-                    ? "기타"
-                    : l.getCategory().getCategoryName();
+            String name =
+                    (l.getCategory() == null || l.getCategory().getCategoryName() == null)
+                            ? "기타"
+                            : l.getCategory().getCategoryName();
             int amt = l.getAmount() == null ? 0 : l.getAmount();
             map.put(name, map.getOrDefault(name, 0) + amt);
         }
