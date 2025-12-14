@@ -1,14 +1,15 @@
 package com.ll.finhabit.config;
 
-import com.ll.finhabit.global.interceptor.LoginCheckInterceptor;
-import com.ll.finhabit.global.resolver.CurrentUserArgumentResolver;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import com.ll.finhabit.global.interceptor.LoginCheckInterceptor;
+import com.ll.finhabit.global.resolver.CurrentUserArgumentResolver;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @RequiredArgsConstructor
@@ -31,8 +32,8 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(loginCheckInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns(
-                        "/api/hello",
                         "/api/auth/**",
+                        "/api/finance/all",
                         "/swagger-ui.html",
                         "/swagger-ui/**",
                         "/v3/api-docs/**",

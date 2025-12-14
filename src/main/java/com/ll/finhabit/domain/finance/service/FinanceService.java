@@ -23,6 +23,12 @@ import lombok.RequiredArgsConstructor;
 public class FinanceService {
 
     private final DailyFinanceRepository dailyFinanceRepository;
+
+    @Transactional(readOnly = true)
+    public List<DailyFinance> getAllDailyFinanceCards() {
+        return dailyFinanceRepository.findAll();
+    }
+
     private final UserKnowledgeRepository userKnowledgeRepository;
     private final UserRepository userRepository;
 
