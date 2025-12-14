@@ -41,8 +41,8 @@ public class NotificationService {
         if (todayMission == null) {
             return NotificationResponse.builder()
                     .type(NotificationType.MISSION)
-                    .title("미션 리마인드")
-                    .message("오늘의 미션이 아직 남았어요 😅 한 번 도전해볼까요?")
+                    .title("오늘의 미션 도착!")
+                    .message("오늘 실천할 작은 목표가 있어요 😊 지금 확인해볼까요?")
                     .createdAt(LocalDateTime.now())
                     .build();
         }
