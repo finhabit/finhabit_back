@@ -19,7 +19,6 @@ public class OpenAPIConfig {
         Info info =
                 new Info().title("Finhabit API").version("v1.0.0").description("Finhabit API Docs");
 
-        // 환경별 서버 URL 설정
         Server server;
         if ("prod".equals(activeProfile)) {
             server = new Server();
