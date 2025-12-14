@@ -5,11 +5,8 @@ import lombok.Getter;
 @Getter
 public class FeedbackNotificationRequest {
     /**
-     * WEEKLY_REPORT        : 주간 리포트
-     * MONTHLY_REPORT       : 월간 리포트
-     * SPENDING_SPIKE       : 소비 급증 시
-     * MISSION_STREAK       : 미션 꾸준히 수행 중
-     * LONG_INACTIVE        : 장기 미접속 시
+     * WEEKLY_REPORT : 주간 리포트 MONTHLY_REPORT : 월간 리포트 SPENDING_SPIKE : 소비 급증 시 MISSION_STREAK : 미션
+     * 꾸준히 수행 중 LONG_INACTIVE : 장기 미접속 시
      */
     private String trigger;
 

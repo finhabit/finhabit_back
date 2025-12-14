@@ -31,12 +31,5 @@ public class Notification {
     private String message;
 
     @Column(nullable = false)
-    private boolean isRead;
-
-    @Column(nullable = false)
     private LocalDateTime createdAt;
-
-    public void markRead() {
-        this.isRead = true;
-    }
 }
