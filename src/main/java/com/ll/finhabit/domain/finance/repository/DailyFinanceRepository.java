@@ -11,6 +11,8 @@ public interface DailyFinanceRepository extends JpaRepository<DailyFinance, Long
 
     Optional<DailyFinance> findByFinanceId(Integer financeId);
 
+    Optional<DailyFinance> findByQuizId(Integer quizId);
+
     Optional<DailyFinance> findTopByCreatedDateOrderByIdDesc(LocalDate createdDate);
 
     Optional<DailyFinance> findTopByOrderByCreatedDateDescIdDesc();
