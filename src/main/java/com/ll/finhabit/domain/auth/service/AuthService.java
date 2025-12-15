@@ -7,6 +7,7 @@ import com.ll.finhabit.domain.auth.entity.UserLevel;
 import com.ll.finhabit.domain.auth.repository.LevelTestRepository;
 import com.ll.finhabit.domain.auth.repository.UserLevelRepository;
 import com.ll.finhabit.domain.auth.repository.UserRepository;
+import com.ll.finhabit.domain.mission.repository.UserMissionRepository;
 import jakarta.transaction.Transactional;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final LevelTestRepository levelTestRepository;
     private final UserLevelRepository userLevelRepository;
+    private final UserMissionRepository userMissionRepository;
 
     private static final int TOTAL_QUESTIONS = 5;
 
@@ -129,5 +131,23 @@ public class AuthService {
                 .email(user.getEmail())
                 .level(user.getLevel())
                 .build();
+    }
+
+    @Transactional
+    public void deleteUser(Long userId) {
+
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        userLevelRepository.deleteByUser_Id(userId);
+
+        userMissionRepository.deleteByUser_Id(userId);
+
+        userRepository.delete(user);
     }
 }

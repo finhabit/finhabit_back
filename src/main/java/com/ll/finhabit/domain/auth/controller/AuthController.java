@@ -16,8 +16,10 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -27,6 +29,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final LevelTestRepository levelTestRepository;
+    private static final String LOGIN_USER_ID = "LOGIN_USER_ID";
 
     @PostMapping("/signup")
     @Operation(
@@ -63,5 +66,63 @@ public class AuthController {
         session.setAttribute("LOGIN_USER_ID", res.getId());
 
         return res;
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "로그아웃", description = "현재 세션을 무효화(invalidate)해서 로그아웃 처리한다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "로그아웃 성공(세션 삭제)"),
+    })
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+
+        HttpSession session = request.getSession(false); // 없으면 새로 만들지 않음
+        if (session != null) {
+            session.invalidate();
+        }
+
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/delete")
+    @Operation(summary = "회원 삭제(탈퇴)", description = "로그인된 사용자의 계정을 삭제하고 세션을 무효화한다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "회원 삭제 성공"),
+        @ApiResponse(responseCode = "401", description = "로그인 상태가 아님"),
+        @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
+    public ResponseEntity<Void> deleteAccount(HttpServletRequest request) {
+
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute(LOGIN_USER_ID) == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        }
+
+        Long userId = (Long) session.getAttribute(LOGIN_USER_ID);
+
+        authService.deleteUser(userId);
+
+        session.invalidate();
+
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "내 로그인 상태 확인", description = "세션에 저장된 LOGIN_USER_ID를 반환한다. (없으면 null)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "조회 성공"),
+    })
+    public ResponseEntity<Long> me(HttpServletRequest request) {
+
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return ResponseEntity.ok(null);
+        }
+
+        Object userId = session.getAttribute(LOGIN_USER_ID);
+        if (userId == null) {
+            return ResponseEntity.ok(null);
+        }
+
+        return ResponseEntity.ok((Long) userId);
     }
 }
