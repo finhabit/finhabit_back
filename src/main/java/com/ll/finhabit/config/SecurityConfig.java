@@ -26,7 +26,7 @@ public class SecurityConfig {
                 "https://www.finhabit.shop"
         ));
         configuration.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"
+                "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
         ));
         configuration.setAllowedHeaders(List.of(
                 "Authorization",
