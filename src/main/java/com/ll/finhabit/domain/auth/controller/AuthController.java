@@ -146,9 +146,9 @@ public class AuthController {
     @DeleteMapping("/me/withdraw")
     @Operation(summary = "회원탈퇴", description = "현재 로그인한 사용자의 계정을 삭제한다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "회원 탈퇴 성공"),
-            @ApiResponse(responseCode = "401", description = "로그인 상태가 아님"),
-            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+        @ApiResponse(responseCode = "204", description = "회원 탈퇴 성공"),
+        @ApiResponse(responseCode = "401", description = "로그인 상태가 아님"),
+        @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
     public ResponseEntity<Void> deleteMe(HttpServletRequest request) {
 
@@ -166,4 +166,3 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 }
-

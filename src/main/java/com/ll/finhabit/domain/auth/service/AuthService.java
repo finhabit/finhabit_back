@@ -163,16 +163,23 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public UserProfileResponseDto getProfile(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
         return UserProfileResponseDto.from(user);
     }
 
     @Transactional
     public void updateProfile(Long userId, UserMeUpdateDto dto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         if (dto.getNickname() != null && !dto.getNickname().isBlank()) {
             user.setNickname(dto.getNickname());
@@ -186,8 +193,13 @@ public class AuthService {
 
     @Transactional
     public void updatePassword(Long userId, UserPasswordUpdateDto dto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
         // 1. 현재 비밀번호 확인
         if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
@@ -196,7 +208,8 @@ public class AuthService {
 
         // 2. 새 비밀번호와 확인 비밀번호 일치 검사
         if (!dto.getNewPassword().equals(dto.getNewPasswordConfirm())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
         }
 
         // 3. 비밀번호 업데이트 (암호화)

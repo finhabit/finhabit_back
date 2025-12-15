@@ -9,7 +9,8 @@ import lombok.Setter;
 public class UserPasswordUpdateDto {
     private String currentPassword;
 
-    @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,16}$",
+    @Pattern(
+            regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,16}$",
             message = "비밀번호는 8~16자의 영문, 숫자, 특수문자 조합이어야 합니다.")
     private String newPassword;
 
