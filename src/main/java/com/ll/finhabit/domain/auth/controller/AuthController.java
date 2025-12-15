@@ -130,7 +130,7 @@ public class AuthController {
             @Valid @RequestBody UserMeUpdateDto dto) {
 
         authService.updateProfile(userId, dto);
-        return ResponseEntity.noContent().build(); // 204 No Content
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "PATCH /auth/me/password: 비밀번호 변경")
@@ -140,7 +140,7 @@ public class AuthController {
             @Valid @RequestBody UserPasswordUpdateDto dto) {
 
         authService.updatePassword(userId, dto);
-        return ResponseEntity.noContent().build(); // 204 No Content
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/me/withdraw")

@@ -15,7 +15,6 @@ import com.ll.finhabit.domain.auth.repository.LevelTestRepository;
 import com.ll.finhabit.domain.auth.repository.UserLevelRepository;
 import com.ll.finhabit.domain.auth.repository.UserRepository;
 import com.ll.finhabit.domain.mission.repository.UserMissionRepository;
-import jakarta.persistence.EntityManager;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,7 +33,6 @@ public class AuthService {
     private final LevelTestRepository levelTestRepository;
     private final UserLevelRepository userLevelRepository;
     private final UserMissionRepository userMissionRepository;
-    private final EntityManager em;
 
     private static final int TOTAL_QUESTIONS = 5;
 
