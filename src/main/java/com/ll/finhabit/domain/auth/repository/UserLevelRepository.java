@@ -5,8 +5,6 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserLevelRepository extends JpaRepository<UserLevel, Long> {
-
     List<UserLevel> findByUserId(Long userId);
-
     void deleteByUser_Id(Long userId);
 }

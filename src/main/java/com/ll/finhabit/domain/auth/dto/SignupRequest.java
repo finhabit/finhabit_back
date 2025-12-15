@@ -33,6 +33,5 @@ public class SignupRequest {
     @NotBlank(message = "비밀번호 확인은 필수입니다.")
     private String passwordConfirm;
 
-    // 레벨 테스트 답
     private List<LevelTestAnswer> levelTestAnswers;
 }

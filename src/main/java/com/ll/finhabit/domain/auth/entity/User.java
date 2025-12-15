@@ -27,5 +27,5 @@ public class User {
 
     @Column(nullable = false)
     @Builder.Default
-    private Integer level = 1; // 디폴트 1
+    private Integer level = 1;
 }

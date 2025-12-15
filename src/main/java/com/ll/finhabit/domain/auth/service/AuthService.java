@@ -96,7 +96,6 @@ public class AuthService {
             }
         }
 
-        // 맞춘 개수 기반 레벨 계산
         int level = 1;
         if (correctCount >= 4) {
             level = 3;
@@ -113,8 +112,8 @@ public class AuthService {
                 .nickname(saved.getNickname())
                 .email(saved.getEmail())
                 .level(saved.getLevel())
-                .correctCount(correctCount) // 맞춘 개수
-                .correctRate(correctRate) // 맞춘 비율(%)
+                .correctCount(correctCount)
+                .correctRate(correctRate)
                 .build();
     }
 
@@ -186,7 +185,6 @@ public class AuthService {
         if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
             user.setEmail(dto.getEmail());
         }
-        // 끝
     }
 
     @Transactional
@@ -199,18 +197,15 @@ public class AuthService {
                                         new ResponseStatusException(
                                                 HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
-        // 1. 현재 비밀번호 확인
         if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "현재 비밀번호가 일치하지 않습니다.");
         }
 
-        // 2. 새 비밀번호와 확인 비밀번호 일치 검사
         if (!dto.getNewPassword().equals(dto.getNewPasswordConfirm())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
         }
 
-        // 3. 비밀번호 업데이트 (암호화)
         user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
         userRepository.save(user);
     }
