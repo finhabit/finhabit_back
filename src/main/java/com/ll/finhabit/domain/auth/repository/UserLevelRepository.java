@@ -1,12 +1,12 @@
 package com.ll.finhabit.domain.auth.repository;
 
 import com.ll.finhabit.domain.auth.entity.UserLevel;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserLevelRepository extends JpaRepository<UserLevel, Long> {
 
     List<UserLevel> findByUserId(Long userId);
+
     void deleteByUser_Id(Long userId);
 }

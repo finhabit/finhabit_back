@@ -9,13 +9,12 @@ import com.ll.finhabit.domain.auth.repository.UserLevelRepository;
 import com.ll.finhabit.domain.auth.repository.UserRepository;
 import com.ll.finhabit.domain.mission.repository.UserMissionRepository;
 import jakarta.transaction.Transactional;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -133,12 +132,17 @@ public class AuthService {
                 .level(user.getLevel())
                 .build();
     }
+
     @Transactional
     public void deleteUser(Long userId) {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
-
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
         userLevelRepository.deleteByUser_Id(userId);
 
@@ -146,5 +150,4 @@ public class AuthService {
 
         userRepository.delete(user);
     }
-
 }
