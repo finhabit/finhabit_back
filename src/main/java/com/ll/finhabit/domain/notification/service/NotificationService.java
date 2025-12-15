@@ -10,13 +10,16 @@ import com.ll.finhabit.domain.notification.dto.NotificationResponse;
 import com.ll.finhabit.domain.notification.entity.NotificationSetting;
 import com.ll.finhabit.domain.notification.entity.NotificationType;
 import com.ll.finhabit.domain.notification.repository.NotificationSettingRepository;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -75,15 +78,12 @@ public class NotificationService {
                                                 .findTopByOrderByCreatedDateDescIdDesc()
                                                 .orElse(null));
 
-        String title =
-                (finance == null || isBlank(finance.getCardTitle()))
-                        ? "오늘의 금융 지식이 도착했어요!"
-                        : finance.getCardTitle();
+        String title = "💡 오늘의 금융 지식이 도착했어요!";
 
         String message =
-                (finance == null || isBlank(finance.getCardContent()))
+                (finance == null || isBlank(finance.getCardTitle()))
                         ? "오늘의 금융 지식이 아직 준비되지 않았어요."
-                        : finance.getCardContent();
+                        : "‘" + finance.getCardTitle() + "’ 한 번 볼까요?";
 
         return NotificationResponse.builder()
                 .type(NotificationType.LEARNING)
