@@ -16,10 +16,8 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -79,29 +77,6 @@ public class AuthController {
         if (session != null) {
             session.invalidate();
         }
-
-        return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping("/delete")
-    @Operation(summary = "회원 삭제(탈퇴)", description = "로그인된 사용자의 계정을 삭제하고 세션을 무효화한다.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "회원 삭제 성공"),
-        @ApiResponse(responseCode = "401", description = "로그인 상태가 아님"),
-        @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
-    })
-    public ResponseEntity<Void> deleteAccount(HttpServletRequest request) {
-
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute(LOGIN_USER_ID) == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        }
-
-        Long userId = (Long) session.getAttribute(LOGIN_USER_ID);
-
-        authService.deleteUser(userId);
-
-        session.invalidate();
 
         return ResponseEntity.ok().build();
     }
