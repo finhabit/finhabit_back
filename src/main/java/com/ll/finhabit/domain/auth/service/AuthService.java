@@ -1,6 +1,13 @@
 package com.ll.finhabit.domain.auth.service;
 
-import com.ll.finhabit.domain.auth.dto.*;
+import com.ll.finhabit.domain.auth.dto.LevelTestAnswer;
+import com.ll.finhabit.domain.auth.dto.LoginRequest;
+import com.ll.finhabit.domain.auth.dto.LoginResponse;
+import com.ll.finhabit.domain.auth.dto.SignupRequest;
+import com.ll.finhabit.domain.auth.dto.SignupResponse;
+import com.ll.finhabit.domain.auth.dto.UserMeUpdateDto;
+import com.ll.finhabit.domain.auth.dto.UserPasswordUpdateDto;
+import com.ll.finhabit.domain.auth.dto.UserProfileResponseDto;
 import com.ll.finhabit.domain.auth.entity.LevelTest;
 import com.ll.finhabit.domain.auth.entity.User;
 import com.ll.finhabit.domain.auth.entity.UserLevel;
@@ -8,12 +15,14 @@ import com.ll.finhabit.domain.auth.repository.LevelTestRepository;
 import com.ll.finhabit.domain.auth.repository.UserLevelRepository;
 import com.ll.finhabit.domain.auth.repository.UserRepository;
 import com.ll.finhabit.domain.mission.repository.UserMissionRepository;
-import jakarta.transaction.Transactional;
+import jakarta.persistence.EntityManager;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -25,6 +34,7 @@ public class AuthService {
     private final LevelTestRepository levelTestRepository;
     private final UserLevelRepository userLevelRepository;
     private final UserMissionRepository userMissionRepository;
+    private final EntityManager em;
 
     private static final int TOTAL_QUESTIONS = 5;
 
@@ -110,7 +120,7 @@ public class AuthService {
                 .build();
     }
 
-    @Transactional(Transactional.TxType.SUPPORTS)
+    @Transactional(propagation = Propagation.SUPPORTS)
     public LoginResponse login(LoginRequest req) {
 
         User user =
@@ -149,5 +159,48 @@ public class AuthService {
         userMissionRepository.deleteByUser_Id(userId);
 
         userRepository.delete(user);
+    }
+
+    @Transactional(readOnly = true)
+    public UserProfileResponseDto getProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        return UserProfileResponseDto.from(user);
+    }
+
+    @Transactional
+    public void updateProfile(Long userId, UserMeUpdateDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        if (dto.getNickname() != null && !dto.getNickname().isBlank()) {
+            user.setNickname(dto.getNickname());
+        }
+
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            user.setEmail(dto.getEmail());
+        }
+        // 끝
+    }
+
+    @Transactional
+    public void updatePassword(Long userId, UserPasswordUpdateDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        // 1. 현재 비밀번호 확인
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "현재 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 2. 새 비밀번호와 확인 비밀번호 일치 검사
+        if (!dto.getNewPassword().equals(dto.getNewPasswordConfirm())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 3. 비밀번호 업데이트 (암호화)
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        userRepository.save(user);
     }
 }
