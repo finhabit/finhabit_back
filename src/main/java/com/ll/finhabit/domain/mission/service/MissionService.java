@@ -175,6 +175,8 @@ public class MissionService {
             userMission.setDoneCount(newDoneCount);
             userMission.setProgress(calculateProgress(newDoneCount, totalCount));
 
+            userMission.setAssignedDate(LocalDate.now());
+
             // 완료 처리
             if (newDoneCount >= totalCount) {
                 userMission.setIsCompleted(true);

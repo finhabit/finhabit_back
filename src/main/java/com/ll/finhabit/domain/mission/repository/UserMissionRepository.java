@@ -35,4 +35,6 @@ public interface UserMissionRepository extends JpaRepository<UserMission, Long> 
 
     Optional<UserMission> findByUser_IdAndMission_MissionIdAndWeekStart(
             Long userId, Long missionId, LocalDate weekStart);
+
+    void deleteByUser_Id(Long userId);
 }
