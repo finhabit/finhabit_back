@@ -1,6 +1,13 @@
 package com.ll.finhabit.domain.auth.service;
 
-import com.ll.finhabit.domain.auth.dto.*;
+import com.ll.finhabit.domain.auth.dto.LevelTestAnswer;
+import com.ll.finhabit.domain.auth.dto.LoginRequest;
+import com.ll.finhabit.domain.auth.dto.LoginResponse;
+import com.ll.finhabit.domain.auth.dto.SignupRequest;
+import com.ll.finhabit.domain.auth.dto.SignupResponse;
+import com.ll.finhabit.domain.auth.dto.UserMeUpdateDto;
+import com.ll.finhabit.domain.auth.dto.UserPasswordUpdateDto;
+import com.ll.finhabit.domain.auth.dto.UserProfileResponseDto;
 import com.ll.finhabit.domain.auth.entity.LevelTest;
 import com.ll.finhabit.domain.auth.entity.User;
 import com.ll.finhabit.domain.auth.entity.UserLevel;
@@ -8,12 +15,13 @@ import com.ll.finhabit.domain.auth.repository.LevelTestRepository;
 import com.ll.finhabit.domain.auth.repository.UserLevelRepository;
 import com.ll.finhabit.domain.auth.repository.UserRepository;
 import com.ll.finhabit.domain.mission.repository.UserMissionRepository;
-import jakarta.transaction.Transactional;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -88,7 +96,6 @@ public class AuthService {
             }
         }
 
-        // 맞춘 개수 기반 레벨 계산
         int level = 1;
         if (correctCount >= 4) {
             level = 3;
@@ -105,12 +112,12 @@ public class AuthService {
                 .nickname(saved.getNickname())
                 .email(saved.getEmail())
                 .level(saved.getLevel())
-                .correctCount(correctCount) // 맞춘 개수
-                .correctRate(correctRate) // 맞춘 비율(%)
+                .correctCount(correctCount)
+                .correctRate(correctRate)
                 .build();
     }
 
-    @Transactional(Transactional.TxType.SUPPORTS)
+    @Transactional(propagation = Propagation.SUPPORTS)
     public LoginResponse login(LoginRequest req) {
 
         User user =
@@ -149,5 +156,57 @@ public class AuthService {
         userMissionRepository.deleteByUser_Id(userId);
 
         userRepository.delete(user);
+    }
+
+    @Transactional(readOnly = true)
+    public UserProfileResponseDto getProfile(Long userId) {
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        return UserProfileResponseDto.from(user);
+    }
+
+    @Transactional
+    public void updateProfile(Long userId, UserMeUpdateDto dto) {
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        if (dto.getNickname() != null && !dto.getNickname().isBlank()) {
+            user.setNickname(dto.getNickname());
+        }
+
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            user.setEmail(dto.getEmail());
+        }
+    }
+
+    @Transactional
+    public void updatePassword(Long userId, UserPasswordUpdateDto dto) {
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "현재 비밀번호가 일치하지 않습니다.");
+        }
+
+        if (!dto.getNewPassword().equals(dto.getNewPasswordConfirm())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+        }
+
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        userRepository.save(user);
     }
 }
