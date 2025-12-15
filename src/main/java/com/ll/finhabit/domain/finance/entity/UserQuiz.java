@@ -5,31 +5,35 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import java.time.LocalDate;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "DailyFinance")
 @Getter
 @Setter
-public class DailyFinance {
+@NoArgsConstructor
+public class UserQuiz {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Integer financeId;
+    @Column(nullable = false)
+    private Long userId;
 
+    @Column(nullable = false)
     private Integer quizId;
 
-    @Column(columnDefinition = "TEXT")
-    private String cardContent;
+    @Column(nullable = false)
+    private LocalDate attemptedDate;
 
-    @Column(length = 30)
-    private String cardTitle;
+    @Column(nullable = false)
+    private Boolean isAnswered = false;
 
-    private Integer cardLevel;
+    @Column(nullable = false)
+    private Boolean isCorrect = false;
 
-    private LocalDate createdDate;
+    private Integer selectedAnswer;
 }

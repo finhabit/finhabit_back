@@ -9,4 +9,6 @@ public interface DailyFinanceRepository extends JpaRepository<DailyFinance, Long
     List<DailyFinance> findByCardLevelOrderByCreatedDateAsc(Integer cardLevel);
 
     Optional<DailyFinance> findByFinanceId(Integer financeId);
+
+    Optional<DailyFinance> findByQuizId(Integer quizId);
 }
