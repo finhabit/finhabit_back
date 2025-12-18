@@ -1,132 +1,66 @@
 package com.ll.finhabit.domain.auth.service;
 
-import com.ll.finhabit.domain.auth.dto.LevelTestAnswer;
-import com.ll.finhabit.domain.auth.dto.LoginRequest;
-import com.ll.finhabit.domain.auth.dto.LoginResponse;
-import com.ll.finhabit.domain.auth.dto.SignupRequest;
-import com.ll.finhabit.domain.auth.dto.SignupResponse;
-import com.ll.finhabit.domain.auth.dto.UserMeUpdateDto;
-import com.ll.finhabit.domain.auth.dto.UserPasswordUpdateDto;
-import com.ll.finhabit.domain.auth.dto.UserProfileResponseDto;
-import com.ll.finhabit.domain.auth.entity.LevelTest;
+import com.ll.finhabit.domain.auth.dto.*;
 import com.ll.finhabit.domain.auth.entity.User;
-import com.ll.finhabit.domain.auth.entity.UserLevel;
-import com.ll.finhabit.domain.auth.repository.LevelTestRepository;
 import com.ll.finhabit.domain.auth.repository.UserLevelRepository;
 import com.ll.finhabit.domain.auth.repository.UserRepository;
 import com.ll.finhabit.domain.mission.repository.UserMissionRepository;
-import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final LevelTestRepository levelTestRepository;
-    private final UserLevelRepository userLevelRepository;
+
     private final UserMissionRepository userMissionRepository;
+    private final UserLevelRepository userLevelRepository;
 
-    private static final int TOTAL_QUESTIONS = 5;
-
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
-
-    private void validateEmailFormat(String email) {
-        if (email == null || !EMAIL_PATTERN.matcher(email).matches()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이메일 형식이 올바르지 않습니다.");
-        }
-    }
+    // 분리한 컴포넌트
+    private final AuthValidator authValidator;
+    private final LevelTestGrader levelTestGrader;
 
     @Transactional
     public SignupResponse signup(SignupRequest req) {
 
-        validateEmailFormat(req.getEmail());
+        authValidator.validateSignup(req);
 
-        if (userRepository.existsByEmail(req.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.");
-        }
-
-        if (!req.getPassword().equals(req.getPasswordConfirm())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다.");
-        }
-
-        User user =
-                User.builder()
-                        .nickname(req.getNickname())
-                        .email(req.getEmail())
-                        .password(passwordEncoder.encode(req.getPassword()))
-                        .build();
+        User user = User.builder()
+                .nickname(req.getNickname())
+                .email(req.getEmail())
+                .password(passwordEncoder.encode(req.getPassword()))
+                .build();
 
         User saved = userRepository.save(user);
 
-        int correctCount = 0;
+        var result = levelTestGrader.gradeAndSave(saved, req.getLevelTestAnswers());
 
-        if (req.getLevelTestAnswers() != null) {
-            for (LevelTestAnswer answerDto : req.getLevelTestAnswers()) {
-                LevelTest test =
-                        levelTestRepository
-                                .findById(answerDto.getTestId())
-                                .orElseThrow(
-                                        () ->
-                                                new ResponseStatusException(
-                                                        HttpStatus.BAD_REQUEST, "존재하지 않는 문제입니다."));
-
-                boolean isCorrect = test.getTestAnswer().equals(answerDto.getUserAnswer());
-                if (isCorrect) {
-                    correctCount++;
-                }
-
-                UserLevel userLevel =
-                        UserLevel.builder()
-                                .user(saved)
-                                .test(test)
-                                .isCorrect(isCorrect)
-                                .userAnswer(answerDto.getUserAnswer())
-                                .build();
-
-                userLevelRepository.save(userLevel);
-            }
-        }
-
-        int level = 1;
-        if (correctCount >= 4) {
-            level = 3;
-        } else if (correctCount >= 2) {
-            level = 2;
-        }
-
-        saved.setLevel(level);
-
-        int correctRate = (int) Math.round(correctCount * 100.0 / TOTAL_QUESTIONS);
+        saved.setLevel(result.level());
 
         return SignupResponse.builder()
                 .id(saved.getId())
                 .nickname(saved.getNickname())
                 .email(saved.getEmail())
                 .level(saved.getLevel())
-                .correctCount(correctCount)
-                .correctRate(correctRate)
+                .correctCount(result.correctCount())
+                .correctRate(result.correctRate())
                 .build();
     }
 
-    @Transactional(propagation = Propagation.SUPPORTS)
+    @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest req) {
 
-        User user =
-                userRepository
-                        .findByEmail(req.getEmail())
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND, "이메일이 존재하지 않습니다."));
+        User user = userRepository.findByEmail(req.getEmail())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "이메일이 존재하지 않습니다."));
 
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "비밀번호가 올바르지 않습니다.");
@@ -143,40 +77,29 @@ public class AuthService {
     @Transactional
     public void deleteUser(Long userId) {
 
-        User user =
-                userRepository
-                        .findById(userId)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
         userLevelRepository.deleteByUser_Id(userId);
-
         userMissionRepository.deleteByUser_Id(userId);
-
         userRepository.delete(user);
     }
 
     @Transactional(readOnly = true)
     public UserProfileResponseDto getProfile(Long userId) {
-        User user =
-                userRepository
-                        .findById(userId)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
         return UserProfileResponseDto.from(user);
     }
 
     @Transactional
     public void updateProfile(Long userId, UserMeUpdateDto dto) {
-        User user =
-                userRepository
-                        .findById(userId)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
         if (dto.getNickname() != null && !dto.getNickname().isBlank()) {
             user.setNickname(dto.getNickname());
@@ -189,24 +112,25 @@ public class AuthService {
 
     @Transactional
     public void updatePassword(Long userId, UserPasswordUpdateDto dto) {
-        User user =
-                userRepository
-                        .findById(userId)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+        log.info("비밀번호 변경 시도: userId={}", userId);
 
-        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        // 검증 로직을 AuthValidator로 이동할 수도 있음
+        if (!passwordEncoder.matches(dto. getCurrentPassword(), user.getPassword())) {
+            log.warn("비밀번호 변경 실패 - 현재 비밀번호 불일치: userId={}", userId);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "현재 비밀번호가 일치하지 않습니다.");
         }
 
         if (!dto.getNewPassword().equals(dto.getNewPasswordConfirm())) {
+            log.warn("비밀번호 변경 실패 - 새 비밀번호 불일치: userId={}", userId);
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
         }
 
-        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
-        userRepository.save(user);
+        user.setPassword(passwordEncoder. encode(dto.getNewPassword()));
+        log.info("비밀번호 변경 완료: userId={}", userId);
     }
 }
