@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-
 public interface UserMissionRepository extends JpaRepository<UserMission, Long> {
 
     // 오늘 이미 배정된 미션 있는지
