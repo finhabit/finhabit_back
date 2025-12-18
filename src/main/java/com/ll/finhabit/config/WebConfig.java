@@ -20,7 +20,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("https://finhabit.shop", "https://www.finhabit.shop")
+                .allowedOrigins(
+                        "https://finhabit.shop",
+                        "https://www.finhabit.shop",
+                        "https://finhabit.vercel.app")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
