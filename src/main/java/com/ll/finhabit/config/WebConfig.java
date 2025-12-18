@@ -23,8 +23,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "https://finhabit.shop",
                         "https://www.finhabit.shop",
-                        "https://finhabitshop.vercel.app"
-                )
+                        "https://finhabitshop.vercel.app")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
