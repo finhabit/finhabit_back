@@ -23,10 +23,11 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "http://localhost:3000",
                 "https://finhabit.shop",
-                "https://www.finhabit.shop"
+                "https://www.finhabit.shop",
+                "https://finhabitshop.vercel.app"
         ));
         configuration.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
         ));
         configuration.setAllowedHeaders(List.of(
                 "Authorization",
