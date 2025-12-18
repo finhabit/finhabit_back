@@ -11,8 +11,12 @@ import com.ll.finhabit.domain.auth.entity.LevelTest;
 import com.ll.finhabit.domain.auth.repository.LevelTestRepository;
 import com.ll.finhabit.domain.auth.service.AuthService;
 import com.ll.finhabit.global.common.CurrentUser;
+import com.ll.finhabit.global.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -55,11 +59,74 @@ public class AuthController {
                     - 레벨 테스트 답안(선택)을 제출하면 정답 개수에 따라 초기 레벨이 결정됩니다.
                     """)
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "회원가입 성공"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "회원가입 성공",
+                content = @Content(schema = @Schema(implementation = SignupResponse.class))),
         @ApiResponse(
                 responseCode = "400",
-                description = "입력값 검증 실패 (이메일 형식 오류, 비밀번호 정책 위반, 비밀번호 불일치, 존재하지 않는 문제 ID)"),
-        @ApiResponse(responseCode = "409", description = "이미 사용 중인 이메일")
+                description = "입력값 검증 실패 (이메일 형식 오류, 비밀번호 정책 위반, 비밀번호 불일치, 존재하지 않는 문제 ID)",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples = {
+                                    @ExampleObject(
+                                            name = "이메일 형식 오류",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message": "이메일 형식이 올바르지 않습니다.",
+                                          "path": "/api/auth/signup"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "비밀번호 불일치",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message":  "비밀번호가 일치하지 않습니다.",
+                                          "path": "/api/auth/signup"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "존재하지 않는 문제",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status":  400,
+                                          "error":  "Bad Request",
+                                          "message": "존재하지 않는 문제입니다.",
+                                          "path": "/api/auth/signup"
+                                        }
+                                        """)
+                                })),
+        @ApiResponse(
+                responseCode = "409",
+                description = "이미 사용 중인 이메일",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 409,
+                                  "error": "409 CONFLICT",
+                                  "message": "이미 사용 중인 이메일입니다.",
+                                  "path": "/api/auth/signup"
+                                }
+                                """)))
     })
     public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest req) {
         return ResponseEntity.ok(authService.signup(req));
@@ -91,9 +158,48 @@ public class AuthController {
                     - 이후 인증이 필요한 API는 해당 세션을 기준으로 동작합니다.
                     """)
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "로그인 성공"),
-        @ApiResponse(responseCode = "401", description = "비밀번호 불일치"),
-        @ApiResponse(responseCode = "404", description = "이메일이 존재하지 않음")
+        @ApiResponse(
+                responseCode = "200",
+                description = "로그인 성공",
+                content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+        @ApiResponse(
+                responseCode = "401",
+                description = "비밀번호 불일치",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 401,
+                                  "error": "401 UNAUTHORIZED",
+                                  "message": "비밀번호가 올바르지 않습니다.",
+                                  "path":  "/api/auth/login"
+                                }
+                                """))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "이메일이 존재하지 않음",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 404,
+                                  "error": "404 NOT_FOUND",
+                                  "message": "이메일이 존재하지 않습니다.",
+                                  "path": "/api/auth/login"
+                                }
+                                """)))
     })
     public LoginResponse login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         LoginResponse res = authService.login(request);
@@ -162,9 +268,49 @@ public class AuthController {
                     - 레벨
                     """)
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "프로필 조회 성공"),
-        @ApiResponse(responseCode = "401", description = "로그인 상태가 아님"),
-        @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+        @ApiResponse(
+                responseCode = "200",
+                description = "프로필 조회 성공",
+                content =
+                        @Content(schema = @Schema(implementation = UserProfileResponseDto.class))),
+        @ApiResponse(
+                responseCode = "401",
+                description = "로그인 상태가 아님",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 401,
+                                  "error": "401 UNAUTHORIZED",
+                                  "message": "로그인이 필요합니다.",
+                                  "path": "/api/auth/me/profile"
+                                }
+                                """))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "사용자를 찾을 수 없음",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 404,
+                                  "error": "404 NOT_FOUND",
+                                  "message": "사용자를 찾을 수 없습니다.",
+                                  "path": "/api/auth/me/profile"
+                                }
+                                """)))
     })
     public ResponseEntity<UserProfileResponseDto> getProfile(
             @Parameter(hidden = true) @CurrentUser Long userId) {
@@ -178,15 +324,57 @@ public class AuthController {
                     """
                     현재 로그인한 사용자의 프로필 정보를 수정합니다.
 
-                    - 수정 가능한 항목: 닉네임, 이메일
+                    - 수정 가능한 항목:  닉네임, 이메일
                     - 전달되지 않은 필드는 변경되지 않습니다.
                     - 닉네임/이메일 중복 시 오류가 발생합니다.
                     """)
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "프로필 수정 성공"),
-        @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
-        @ApiResponse(responseCode = "401", description = "로그인 상태가 아님"),
-        @ApiResponse(responseCode = "409", description = "닉네임 또는 이메일 중복")
+        @ApiResponse(
+                responseCode = "400",
+                description = "입력값 검증 실패",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 400,
+                                  "error": "Validation Failed",
+                                  "message":  "이메일 형식이 올바르지 않습니다.",
+                                  "path":  "/api/auth/me/profile"
+                                }
+                                """))),
+        @ApiResponse(
+                responseCode = "401",
+                description = "로그인 상태가 아님",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(
+                responseCode = "409",
+                description = "닉네임 또는 이메일 중복",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 409,
+                                  "error": "409 CONFLICT",
+                                  "message": "이미 사용 중인 이메일입니다.",
+                                  "path": "/api/auth/me/profile"
+                                }
+                                """)))
     })
     public ResponseEntity<Void> updateProfile(
             @Parameter(hidden = true) @CurrentUser Long userId,
@@ -207,8 +395,44 @@ public class AuthController {
                     """)
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "비밀번호 변경 성공"),
-        @ApiResponse(responseCode = "400", description = "비밀번호 정책 위반 또는 확인 비밀번호 불일치"),
-        @ApiResponse(responseCode = "401", description = "현재 비밀번호 불일치 또는 로그인 상태가 아님")
+        @ApiResponse(
+                responseCode = "400",
+                description = "비밀번호 정책 위반 또는 확인 비밀번호 불일치",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 400,
+                                  "error": "Bad Request",
+                                  "message": "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.",
+                                  "path": "/api/auth/me/password"
+                                }
+                                """))),
+        @ApiResponse(
+                responseCode = "401",
+                description = "현재 비밀번호 불일치 또는 로그인 상태가 아님",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status":  401,
+                                  "error": "401 UNAUTHORIZED",
+                                  "message": "현재 비밀번호가 일치하지 않습니다.",
+                                  "path":  "/api/auth/me/password"
+                                }
+                                """)))
     })
     public ResponseEntity<Void> updatePassword(
             @Parameter(hidden = true) @CurrentUser Long userId,
@@ -229,8 +453,44 @@ public class AuthController {
                     """)
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "회원 탈퇴 성공"),
-        @ApiResponse(responseCode = "401", description = "로그인 상태가 아님"),
-        @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+        @ApiResponse(
+                responseCode = "401",
+                description = "로그인 상태가 아님",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 401,
+                                  "error": "401 UNAUTHORIZED",
+                                  "message": "로그인이 필요합니다.",
+                                  "path": "/api/auth/me/withdraw"
+                                }
+                                """))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "사용자를 찾을 수 없음",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 404,
+                                  "error": "404 NOT_FOUND",
+                                  "message": "사용자를 찾을 수 없습니다.",
+                                  "path": "/api/auth/me/withdraw"
+                                }
+                                """)))
     })
     public ResponseEntity<Void> deleteMe(HttpServletRequest request) {
 

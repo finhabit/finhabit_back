@@ -8,8 +8,12 @@ import com.ll.finhabit.domain.finance.dto.QuizQuestionDto;
 import com.ll.finhabit.domain.finance.dto.QuizRequestDto;
 import com.ll.finhabit.domain.finance.service.QuizService;
 import com.ll.finhabit.global.common.CurrentUser;
+import com.ll.finhabit.global.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,9 +48,74 @@ public class QuizController {
                     - 퀴즈는 반드시 오늘의 금융 지식 카드와 연결됩니다.
                     """)
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "오늘의 퀴즈 문제 조회 성공"),
-        @ApiResponse(responseCode = "401", description = "로그인되지 않은 사용자 (인증 필요)"),
-        @ApiResponse(responseCode = "404", description = "오늘의 퀴즈 또는 연결된 금융 지식 카드가 존재하지 않음")
+        @ApiResponse(
+                responseCode = "200",
+                description = "오늘의 퀴즈 문제 조회 성공",
+                content = @Content(schema = @Schema(implementation = QuizQuestionDto.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "오늘 오픈된 금융 지식 카드가 없거나 퀴즈 정보를 찾을 수 없음",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples = {
+                                    @ExampleObject(
+                                            name = "오늘의 금융 지식 카드 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status":  400,
+                                          "error": "Bad Request",
+                                          "message": "오늘 오픈된 금융 지식 카드가 없습니다.",
+                                          "path": "/api/quiz/today"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "연결된 퀴즈 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status":  400,
+                                          "error": "Bad Request",
+                                          "message": "오늘의 금융 지식에 연결된 퀴즈가 없습니다.",
+                                          "path":  "/api/quiz/today"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "퀴즈 정보 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message":  "퀴즈 정보를 찾을 수 없습니다.",
+                                          "path": "/api/quiz/today"
+                                        }
+                                        """)
+                                })),
+        @ApiResponse(
+                responseCode = "401",
+                description = "로그인되지 않은 사용자 (인증 필요)",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 401,
+                                  "error": "401 UNAUTHORIZED",
+                                  "message": "로그인이 필요합니다.",
+                                  "path": "/api/quiz/today"
+                                }
+                                """)))
     })
     public ResponseEntity<QuizQuestionDto> getTodayQuiz(
             @Parameter(hidden = true, description = "세션 기반 인증을 통해 자동 주입되는 로그인 사용자 ID") @CurrentUser
@@ -69,9 +138,74 @@ public class QuizController {
                     - 제출 결과로 정답 여부, 선택 답안 정보가 반환됩니다.
                     """)
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "퀴즈 정답 채점 성공"),
-        @ApiResponse(responseCode = "400", description = "이미 퀴즈를 푼 경우 또는 요청 데이터가 올바르지 않음"),
-        @ApiResponse(responseCode = "401", description = "로그인되지 않은 사용자 (인증 필요)")
+        @ApiResponse(
+                responseCode = "200",
+                description = "퀴즈 정답 채점 성공",
+                content = @Content(schema = @Schema(implementation = QuizCheckDto.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "이미 퀴즈를 푼 경우, 퀴즈 기록이 없거나 요청 데이터가 올바르지 않음",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples = {
+                                    @ExampleObject(
+                                            name = "이미 퀴즈를 푼 경우",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message": "이미 퀴즈를 풀었습니다.",
+                                          "path": "/api/quiz/check"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "퀴즈 기록 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message":  "오늘의 퀴즈 기록이 없습니다.  먼저 퀴즈를 조회해야 합니다.",
+                                          "path": "/api/quiz/check"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "퀴즈 정보 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message":  "퀴즈 정보를 찾을 수 없습니다.",
+                                          "path": "/api/quiz/check"
+                                        }
+                                        """)
+                                })),
+        @ApiResponse(
+                responseCode = "401",
+                description = "로그인되지 않은 사용자 (인증 필요)",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp":  "2025-12-18T17:30:00",
+                                  "status": 401,
+                                  "error": "401 UNAUTHORIZED",
+                                  "message": "로그인이 필요합니다.",
+                                  "path": "/api/quiz/check"
+                                }
+                                """)))
     })
     public ResponseEntity<QuizCheckDto> checkQuizAnswer(
             @Parameter(hidden = true, description = "세션 기반 인증을 통해 자동 주입되는 로그인 사용자 ID") @CurrentUser
@@ -94,9 +228,74 @@ public class QuizController {
                     - 아직 정답을 제출하지 않은 경우 조회할 수 없습니다.
                     """)
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "퀴즈 정답 및 해설 조회 성공"),
-        @ApiResponse(responseCode = "400", description = "아직 퀴즈 정답을 제출하지 않아 해설을 볼 수 없음"),
-        @ApiResponse(responseCode = "401", description = "로그인되지 않은 사용자 (인증 필요)")
+        @ApiResponse(
+                responseCode = "200",
+                description = "퀴즈 정답 및 해설 조회 성공",
+                content = @Content(schema = @Schema(implementation = QuizAnswerDto.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "아직 퀴즈 정답을 제출하지 않아 해설을 볼 수 없음",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples = {
+                                    @ExampleObject(
+                                            name = "퀴즈 기록 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp":  "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message": "오늘의 퀴즈 기록이 없습니다.",
+                                          "path": "/api/quiz/today/answer"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "정답 미제출",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message":  "정답을 체크하지 않아 해설을 볼 수 없습니다.",
+                                          "path": "/api/quiz/today/answer"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "퀴즈 정보 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message":  "퀴즈 정보를 찾을 수 없습니다.",
+                                          "path": "/api/quiz/today/answer"
+                                        }
+                                        """)
+                                })),
+        @ApiResponse(
+                responseCode = "401",
+                description = "로그인되지 않은 사용자 (인증 필요)",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 401,
+                                  "error": "401 UNAUTHORIZED",
+                                  "message": "로그인이 필요합니다.",
+                                  "path": "/api/quiz/today/answer"
+                                }
+                                """)))
     })
     public ResponseEntity<QuizAnswerDto> getQuizAnswer(
             @Parameter(hidden = true, description = "세션 기반 인증을 통해 자동 주입되는 로그인 사용자 ID") @CurrentUser
@@ -119,8 +318,29 @@ public class QuizController {
                     - 각 항목은 지난 퀴즈 상세 조회 API와 연동됩니다.
                     """)
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "지난 퀴즈 목록 조회 성공"),
-        @ApiResponse(responseCode = "401", description = "로그인되지 않은 사용자 (인증 필요)")
+        @ApiResponse(
+                responseCode = "200",
+                description = "지난 퀴즈 목록 조회 성공",
+                content = @Content(schema = @Schema(implementation = QuizHistoryDto.class))),
+        @ApiResponse(
+                responseCode = "401",
+                description = "로그인되지 않은 사용자 (인증 필요)",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 401,
+                                  "error": "401 UNAUTHORIZED",
+                                  "message":  "로그인이 필요합니다.",
+                                  "path": "/api/quiz/list"
+                                }
+                                """)))
     })
     public ResponseEntity<QuizHistoryDto> getQuizHistory(
             @Parameter(hidden = true, description = "세션 기반 인증을 통해 자동 주입되는 로그인 사용자 ID") @CurrentUser
@@ -147,9 +367,86 @@ public class QuizController {
                     - 지난 퀴즈 목록 화면에서 개별 퀴즈 클릭 시
                     """)
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "지난 퀴즈 상세 정보 조회 성공"),
-        @ApiResponse(responseCode = "400", description = "해당 퀴즈에 대한 응시 기록이 없거나 데이터가 불완전함"),
-        @ApiResponse(responseCode = "401", description = "로그인되지 않은 사용자 (인증 필요)")
+        @ApiResponse(
+                responseCode = "200",
+                description = "지난 퀴즈 상세 정보 조회 성공",
+                content = @Content(schema = @Schema(implementation = QuizHistoryDetailDto.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "해당 퀴즈에 대한 응시 기록이 없거나 데이터가 불완전함",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples = {
+                                    @ExampleObject(
+                                            name = "응시 기록 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status":  400,
+                                          "error": "Bad Request",
+                                          "message": "해당 퀴즈에 대한 사용자의 응시 기록을 찾을 수 없습니다.",
+                                          "path": "/api/quiz/123"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "퀴즈 정보 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message":  "퀴즈 정보를 찾을 수 없습니다.  (ID: 123)",
+                                          "path": "/api/quiz/123"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "금융 지식 카드 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message": "퀴즈와 연결된 금융 지식 카드를 찾을 수 없습니다.",
+                                          "path": "/api/quiz/123"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "지식 카드 열람 기록 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp":  "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message": "지식 카드 열람 기록을 찾을 수 없습니다.",
+                                          "path": "/api/quiz/123"
+                                        }
+                                        """)
+                                })),
+        @ApiResponse(
+                responseCode = "401",
+                description = "로그인되지 않은 사용자 (인증 필요)",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 401,
+                                  "error": "401 UNAUTHORIZED",
+                                  "message": "로그인이 필요합니다.",
+                                  "path": "/api/quiz/123"
+                                }
+                                """)))
     })
     public ResponseEntity<QuizHistoryDetailDto> getQuizHistoryDetail(
             @Parameter(hidden = true, description = "세션 기반 인증을 통해 자동 주입되는 로그인 사용자 ID") @CurrentUser

@@ -6,12 +6,12 @@ import com.ll.finhabit.domain.auth.repository.UserLevelRepository;
 import com.ll.finhabit.domain.auth.repository.UserRepository;
 import com.ll.finhabit.domain.mission.repository.UserMissionRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -33,11 +33,12 @@ public class AuthService {
 
         authValidator.validateSignup(req);
 
-        User user = User.builder()
-                .nickname(req.getNickname())
-                .email(req.getEmail())
-                .password(passwordEncoder.encode(req.getPassword()))
-                .build();
+        User user =
+                User.builder()
+                        .nickname(req.getNickname())
+                        .email(req.getEmail())
+                        .password(passwordEncoder.encode(req.getPassword()))
+                        .build();
 
         User saved = userRepository.save(user);
 
@@ -58,9 +59,13 @@ public class AuthService {
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest req) {
 
-        User user = userRepository.findByEmail(req.getEmail())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "이메일이 존재하지 않습니다."));
+        User user =
+                userRepository
+                        .findByEmail(req.getEmail())
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "이메일이 존재하지 않습니다."));
 
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "비밀번호가 올바르지 않습니다.");
@@ -77,9 +82,13 @@ public class AuthService {
     @Transactional
     public void deleteUser(Long userId) {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
         userLevelRepository.deleteByUser_Id(userId);
         userMissionRepository.deleteByUser_Id(userId);
@@ -88,18 +97,26 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public UserProfileResponseDto getProfile(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
         return UserProfileResponseDto.from(user);
     }
 
     @Transactional
     public void updateProfile(Long userId, UserMeUpdateDto dto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
         if (dto.getNickname() != null && !dto.getNickname().isBlank()) {
             user.setNickname(dto.getNickname());
@@ -114,12 +131,16 @@ public class AuthService {
     public void updatePassword(Long userId, UserPasswordUpdateDto dto) {
         log.info("비밀번호 변경 시도: userId={}", userId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
         // 검증 로직을 AuthValidator로 이동할 수도 있음
-        if (!passwordEncoder.matches(dto. getCurrentPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
             log.warn("비밀번호 변경 실패 - 현재 비밀번호 불일치: userId={}", userId);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "현재 비밀번호가 일치하지 않습니다.");
         }
@@ -130,7 +151,7 @@ public class AuthService {
                     HttpStatus.BAD_REQUEST, "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
         }
 
-        user.setPassword(passwordEncoder. encode(dto.getNewPassword()));
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
         log.info("비밀번호 변경 완료: userId={}", userId);
     }
 }

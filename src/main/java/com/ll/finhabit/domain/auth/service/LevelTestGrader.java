@@ -6,13 +6,12 @@ import com.ll.finhabit.domain.auth.entity.User;
 import com.ll.finhabit.domain.auth.entity.UserLevel;
 import com.ll.finhabit.domain.auth.repository.LevelTestRepository;
 import com.ll.finhabit.domain.auth.repository.UserLevelRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
 
 @Slf4j
 @Component
@@ -32,19 +31,24 @@ public class LevelTestGrader {
         int correctCount = 0;
 
         for (LevelTestAnswer answerDto : answers) {
-            LevelTest test = levelTestRepository.findById(answerDto.getTestId())
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "존재하지 않는 문제입니다."));
+            LevelTest test =
+                    levelTestRepository
+                            .findById(answerDto.getTestId())
+                            .orElseThrow(
+                                    () ->
+                                            new ResponseStatusException(
+                                                    HttpStatus.BAD_REQUEST, "존재하지 않는 문제입니다."));
 
             boolean isCorrect = test.getTestAnswer().equals(answerDto.getUserAnswer());
             if (isCorrect) correctCount++;
 
-            UserLevel userLevel = UserLevel.builder()
-                    .user(user)
-                    .test(test)
-                    .isCorrect(isCorrect)
-                    .userAnswer(answerDto.getUserAnswer())
-                    .build();
+            UserLevel userLevel =
+                    UserLevel.builder()
+                            .user(user)
+                            .test(test)
+                            .isCorrect(isCorrect)
+                            .userAnswer(answerDto.getUserAnswer())
+                            .build();
 
             userLevelRepository.save(userLevel);
         }
