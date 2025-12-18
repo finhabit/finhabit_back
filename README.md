@@ -154,7 +154,7 @@ API 문서는 Swagger를 통해 제공됩니다.
 - **서버**: AWS EC2
 - **데이터베이스**: AWS RDS (MySQL 8.0)
 - **컨테이너**: Docker
-- **도메인**: [www.finhabit.shop](https://www.finhabit.shop)
+- **도메인**: `https://www.finhabit.shop`
 <br>
 
 ## Contributing☘️
