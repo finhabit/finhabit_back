@@ -3,8 +3,12 @@ package com.ll.finhabit.domain.finance.controller;
 import com.ll.finhabit.domain.finance.dto.FinanceQuizResponseDto;
 import com.ll.finhabit.domain.finance.service.FinanceQuizService;
 import com.ll.finhabit.global.common.CurrentUser;
+import com.ll.finhabit.global.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,9 +43,99 @@ public class FinanceQuizController {
                     - 퀴즈는 항상 해당 날짜의 지식 카드 기준으로 제공됩니다.
                     """)
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "오늘의 금융 지식 및 퀴즈 데이터 조회 성공"),
-        @ApiResponse(responseCode = "401", description = "로그인되지 않은 사용자 (인증 필요)"),
-        @ApiResponse(responseCode = "404", description = "사용자 또는 오늘의 금융 지식/퀴즈 데이터를 찾을 수 없음")
+        @ApiResponse(
+                responseCode = "200",
+                description = "오늘의 금융 지식 및 퀴즈 데이터 조회 성공",
+                content =
+                        @Content(schema = @Schema(implementation = FinanceQuizResponseDto.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "오늘의 금융 지식/퀴즈 데이터를 찾을 수 없거나 배정 실패",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples = {
+                                    @ExampleObject(
+                                            name = "오늘 오픈된 금융 지식 카드 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message": "오늘 오픈된 금융 지식 카드가 없습니다.",
+                                          "path": "/api/finance-quiz"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "연결된 퀴즈 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message": "오늘의 금융 지식에 연결된 퀴즈가 없습니다.",
+                                          "path":  "/api/finance-quiz"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "배정된 지식 콘텐츠 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message": "배정된 지식 콘텐츠를 찾을 수 없습니다.",
+                                          "path": "/api/finance-quiz"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "해당 레벨의 지식 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message": "해당 레벨의 지식이 존재하지 않습니다.",
+                                          "path":  "/api/finance-quiz"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "사용자 정보 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message": "사용자 정보를 찾을 수 없습니다.",
+                                          "path": "/api/finance-quiz"
+                                        }
+                                        """)
+                                })),
+        @ApiResponse(
+                responseCode = "401",
+                description = "로그인되지 않은 사용자 (인증 필요)",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 401,
+                                  "error": "401 UNAUTHORIZED",
+                                  "message": "로그인이 필요합니다.",
+                                  "path": "/api/finance-quiz"
+                                }
+                                """)))
     })
     public ResponseEntity<FinanceQuizResponseDto> getFinanceQuizData(
             @Parameter(hidden = true, description = "세션 기반 인증을 통해 자동 주입되는 로그인 사용자 ID") @CurrentUser

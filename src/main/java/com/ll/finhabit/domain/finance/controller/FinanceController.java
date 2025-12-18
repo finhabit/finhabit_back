@@ -4,8 +4,12 @@ import com.ll.finhabit.domain.finance.dto.FinanceCardDto;
 import com.ll.finhabit.domain.finance.entity.DailyFinance;
 import com.ll.finhabit.domain.finance.service.FinanceService;
 import com.ll.finhabit.global.common.CurrentUser;
+import com.ll.finhabit.global.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,13 +36,90 @@ public class FinanceController {
                     로그인된 사용자의 레벨에 맞는 금융 지식 카드를 하루에 1회 제공합니다.
 
                     - 하루에 최초 호출 시: 새로운 카드가 오픈 및 저장됩니다.
-                    - 같은 날 재호출 시: 이미 오픈된 카드가 그대로 반환됩니다.
+                    - 같은 날 재호출 시:  이미 오픈된 카드가 그대로 반환됩니다.
                     - 카드 오픈 여부는 사용자별로 관리됩니다.
                     """)
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "오늘의 금융 지식 카드 조회 성공"),
-        @ApiResponse(responseCode = "401", description = "로그인되지 않은 사용자"),
-        @ApiResponse(responseCode = "404", description = "사용자 또는 해당 레벨의 금융 지식을 찾을 수 없음")
+        @ApiResponse(
+                responseCode = "200",
+                description = "오늘의 금융 지식 카드 조회 성공",
+                content = @Content(schema = @Schema(implementation = FinanceCardDto.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "배정된 지식 콘텐츠를 찾을 수 없거나 해당 레벨의 지식이 존재하지 않음",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples = {
+                                    @ExampleObject(
+                                            name = "배정된 지식 콘텐츠 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message": "배정된 지식 콘텐츠를 찾을 수 없습니다.",
+                                          "path": "/api/finance"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "해당 레벨의 지식 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message":  "해당 레벨의 지식이 존재하지 않습니다.",
+                                          "path": "/api/finance"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "지식 콘텐츠를 찾을 수 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message": "지식 콘텐츠를 찾을 수 없습니다.",
+                                          "path": "/api/finance"
+                                        }
+                                        """),
+                                    @ExampleObject(
+                                            name = "사용자 정보 없음",
+                                            value =
+                                                    """
+                                        {
+                                          "timestamp": "2025-12-18T17:30:00",
+                                          "status": 400,
+                                          "error": "Bad Request",
+                                          "message": "사용자 정보를 찾을 수 없습니다.",
+                                          "path": "/api/finance"
+                                        }
+                                        """)
+                                })),
+        @ApiResponse(
+                responseCode = "401",
+                description = "로그인되지 않은 사용자",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 401,
+                                  "error": "401 UNAUTHORIZED",
+                                  "message": "로그인이 필요합니다.",
+                                  "path": "/api/finance"
+                                }
+                                """)))
     })
     public ResponseEntity<FinanceCardDto> getTodayFinanceKnowledge(
             @Parameter(hidden = true, description = "세션을 통해 자동 주입되는 로그인 사용자 ID") @CurrentUser
@@ -60,8 +141,29 @@ public class FinanceController {
                     - 오늘의 카드도 포함됩니다.
                     """)
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "주간 금융 지식 조회 성공"),
-        @ApiResponse(responseCode = "401", description = "로그인되지 않은 사용자")
+        @ApiResponse(
+                responseCode = "200",
+                description = "주간 금융 지식 조회 성공",
+                content = @Content(schema = @Schema(implementation = FinanceCardDto.class))),
+        @ApiResponse(
+                responseCode = "401",
+                description = "로그인되지 않은 사용자",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status": 401,
+                                  "error": "401 UNAUTHORIZED",
+                                  "message":  "로그인이 필요합니다.",
+                                  "path": "/api/finance/week"
+                                }
+                                """)))
     })
     public ResponseEntity<List<FinanceCardDto>> getWeeklyKnowledge(
             @Parameter(hidden = true, description = "세션을 통해 자동 주입되는 로그인 사용자 ID") @CurrentUser
@@ -83,8 +185,29 @@ public class FinanceController {
                     - 사용자의 열람 기록을 기준으로 반환됩니다.
                     """)
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "월간 금융 지식 조회 성공"),
-        @ApiResponse(responseCode = "401", description = "로그인되지 않은 사용자")
+        @ApiResponse(
+                responseCode = "200",
+                description = "월간 금융 지식 조회 성공",
+                content = @Content(schema = @Schema(implementation = FinanceCardDto.class))),
+        @ApiResponse(
+                responseCode = "401",
+                description = "로그인되지 않은 사용자",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                {
+                                  "timestamp": "2025-12-18T17:30:00",
+                                  "status":  401,
+                                  "error": "401 UNAUTHORIZED",
+                                  "message": "로그인이 필요합니다.",
+                                  "path": "/api/finance/month"
+                                }
+                                """)))
     })
     public ResponseEntity<List<FinanceCardDto>> getMonthlyKnowledge(
             @Parameter(hidden = true, description = "세션을 통해 자동 주입되는 로그인 사용자 ID") @CurrentUser
@@ -105,7 +228,12 @@ public class FinanceController {
                     - 사용자 레벨, 날짜, 오픈 여부와 관계없이 전체 데이터를 반환합니다.
                     - 운영 환경에서는 사용을 권장하지 않습니다.
                     """)
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "전체 금융 지식 카드 조회 성공")})
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "전체 금융 지식 카드 조회 성공",
+                content = @Content(schema = @Schema(implementation = DailyFinance.class)))
+    })
     public ResponseEntity<List<DailyFinance>> getAllFinanceKnowledge() {
 
         List<DailyFinance> allCards = financeService.getAllDailyFinanceCards();
