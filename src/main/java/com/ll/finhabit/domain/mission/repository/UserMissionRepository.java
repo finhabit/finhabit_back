@@ -4,6 +4,7 @@ import com.ll.finhabit.domain.mission.entity.UserMission;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserMissionRepository extends JpaRepository<UserMission, Long> {
@@ -16,21 +17,26 @@ public interface UserMissionRepository extends JpaRepository<UserMission, Long> 
             Long userId, Long missionId, LocalDate weekStart);
 
     // 이번 주 + 미완료 미션 조회
+    @EntityGraph(attributePaths = "mission")
     List<UserMission> findByUser_IdAndWeekStartAndIsCompletedFalseOrderByUsermissionIdAsc(
             Long userId, LocalDate weekStart);
 
     // 이번 주 + 미완료 미션 중 첫 번째(오늘의 미션)
+    @EntityGraph(attributePaths = "mission")
     Optional<UserMission> findFirstByUser_IdAndWeekStartAndIsCompletedFalseOrderByUsermissionIdAsc(
             Long userId, LocalDate weekStart);
 
     // 이번 주 + 완료된 미션 조회(아카이브)
+    @EntityGraph(attributePaths = "mission")
     List<UserMission> findByUser_IdAndWeekStartAndIsCompletedTrueOrderByCompletedAtDesc(
             Long userId, LocalDate weekStart);
 
     // 이번 주에 이 유저의 모든 미션
+    @EntityGraph(attributePaths = "mission")
     List<UserMission> findByUser_IdAndWeekStart(Long userId, LocalDate weekStart);
 
     // 아카이브 전체 조회용: weekStart 있는 완료된 미션들
+    @EntityGraph(attributePaths = "mission")
     List<UserMission> findByUser_IdAndIsCompletedTrueAndWeekStartIsNotNull(Long userId);
 
     Optional<UserMission> findByUser_IdAndMission_MissionIdAndWeekStart(

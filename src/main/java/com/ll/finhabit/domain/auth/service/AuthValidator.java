@@ -2,13 +2,12 @@ package com.ll.finhabit.domain.auth.service;
 
 import com.ll.finhabit.domain.auth.dto.SignupRequest;
 import com.ll.finhabit.domain.auth.repository.UserRepository;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.regex.Pattern;
 
 @Slf4j
 @Component
